@@ -1,0 +1,12 @@
+# The React (Vite) storefront lives in /frontend. Without this file Netlify
+# publishes the repository root, which has no index.html, so every URL 404s.
+[build]
+  base = "frontend"
+  command = "npm ci --include=dev && npm run build"
+  publish = "dist"
+
+# Single-page app fallback so client-side routes (e.g. /shop, /admin) work on refresh.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
