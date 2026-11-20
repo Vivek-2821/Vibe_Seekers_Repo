@@ -1,0 +1,45 @@
+package com.vibeseekers.repository;
+
+import com.vibeseekers.entity.Product;
+import com.vibeseekers.entity.ProductCategory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    Optional<Product> findBySlug(String slug);
+
+    List<Product> findByIsActiveTrue();
+
+    List<Product> findByIsActiveTrueAndIsNewArrivalTrue();
+
+    List<Product> findByIsActiveTrueAndCategory(ProductCategory category);
+
+    @Query("SELECT DISTINCT p FROM Product p " +
+           "LEFT JOIN p.sizeStocks s " +
+           "WHERE (:activeOnly = false OR p.isActive = true) " +
+           "AND (:category IS NULL OR p.category = :category) " +
+           "AND (:minPrice IS NULL OR p.price >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR p.price <= :maxPrice) " +
+           "AND (:size IS NULL OR (s.size = :size AND s.stock > 0)) " +
+           "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Product> findWithFilters(@Param("activeOnly") boolean activeOnly,
+                                 @Param("category") ProductCategory category,
+                                 @Param("minPrice") BigDecimal minPrice,
+                                 @Param("maxPrice") BigDecimal maxPrice,
+                                 @Param("size") String size,
+                                 @Param("keyword") String keyword,
+                                 Pageable pageable);
+
+    @Query("SELECT p FROM Product p JOIN p.sizeStocks s WHERE s.stock <= :threshold AND p.isActive = true GROUP BY p")
+    List<Product> findLowStockProducts(@Param("threshold") int threshold);
+}

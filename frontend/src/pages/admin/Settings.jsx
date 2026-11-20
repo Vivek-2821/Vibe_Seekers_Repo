@@ -1,0 +1,263 @@
+import React, { useState, useEffect } from 'react';
+import { Settings, Save, CheckCircle2, ShieldAlert, CreditCard, Phone, Mail, Instagram } from 'lucide-react';
+import axiosInstance from '../../api/axiosInstance';
+
+export const StoreSettings = () => {
+  const [settings, setSettings] = useState({
+    codEnabled: 'false',
+    returnsEnabled: 'false',
+    upiId: '9860498749-2@ybl',
+    upiPayeeName: 'Vivek Ashok Matne',
+    supportPhone: '+91 9860498749',
+    storeEmail: 'vibeseekers09@gmail.com',
+    instagramUrl: 'https://www.instagram.com/vibe_seekers_09?cnvx=enZ5NDYwM2doN2ll&utm_source=qr',
+  });
+
+  const [savingKey, setSavingKey] = useState(null);
+  const [successToast, setSuccessToast] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axiosInstance.get('/api/admin/settings');
+        if (res.data.data) {
+          setSettings((prev) => ({ ...prev, ...res.data.data }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch store settings', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const saveSingleSetting = async (key, value, description) => {
+    setSavingKey(key);
+    try {
+      await axiosInstance.put('/api/admin/settings', {
+        settingKey: key,
+        settingValue: String(value),
+        description,
+      });
+      setSettings((prev) => ({ ...prev, [key]: String(value) }));
+      setSuccessToast(`Setting "${key}" updated successfully.`);
+      setTimeout(() => setSuccessToast(''), 3000);
+    } catch (err) {
+      alert('Failed to update setting');
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl space-y-8">
+      
+      {/* Title */}
+      <div className="border-b border-zinc-800 pb-6">
+        <span className="text-xs font-black uppercase tracking-widest text-vibe-accent">
+          Global Configuration
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-black uppercase text-white mt-0.5">
+          Store Settings & Policy Toggles
+        </h1>
+        <p className="text-xs text-zinc-400 mt-1">
+          Adjust payment rules, return policies, and public customer support contact details.
+        </p>
+      </div>
+
+      {successToast && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2.5 animate-fadeIn">
+          <CheckCircle2 size={18} />
+          <span>{successToast}</span>
+        </div>
+      )}
+
+      {/* Toggles Card (COD & Returns) */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6">
+        <h2 className="text-sm font-black uppercase tracking-wider text-white border-b border-zinc-800 pb-3 flex items-center gap-2">
+          <ShieldAlert size={18} className="text-vibe-accent" />
+          <span>Storefront Policy Toggles</span>
+        </h2>
+
+        {/* Returns Enabled Toggle */}
+        <div className="flex items-center justify-between py-3 border-b border-zinc-800/80">
+          <div>
+            <h3 className="text-xs font-bold uppercase text-white">Enable Customer Returns</h3>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Current state: <strong className={settings.returnsEnabled === 'true' ? 'text-emerald-400' : 'text-amber-400'}>
+                {settings.returnsEnabled === 'true' ? 'RETURNS ENABLED' : 'RETURNS DISABLED (Default)'}
+              </strong>.
+            </p>
+          </div>
+          <button
+            onClick={() =>
+              saveSingleSetting(
+                'returnsEnabled',
+                settings.returnsEnabled === 'true' ? 'false' : 'true',
+                'Toggle return requests on customer storefront'
+              )
+            }
+            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+              settings.returnsEnabled === 'true'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            }`}
+          >
+            {settings.returnsEnabled === 'true' ? 'Enabled' : 'Disabled'}
+          </button>
+        </div>
+
+        {/* COD Enabled Toggle */}
+        <div className="flex items-center justify-between py-3">
+          <div>
+            <h3 className="text-xs font-bold uppercase text-white">Enable Cash on Delivery (COD)</h3>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Current state: <strong className={settings.codEnabled === 'true' ? 'text-emerald-400' : 'text-red-400'}>
+                {settings.codEnabled === 'true' ? 'COD ENABLED' : 'COD DISABLED (Prepaid Only)'}
+              </strong>.
+            </p>
+          </div>
+          <button
+            onClick={() =>
+              saveSingleSetting(
+                'codEnabled',
+                settings.codEnabled === 'true' ? 'false' : 'true',
+                'Toggle Cash on Delivery availability at checkout'
+              )
+            }
+            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+              settings.codEnabled === 'true'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-zinc-800 text-zinc-400 hover:text-white'
+            }`}
+          >
+            {settings.codEnabled === 'true' ? 'Enabled' : 'Disabled'}
+          </button>
+        </div>
+      </div>
+
+      {/* Official UPI Details */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6">
+        <h2 className="text-sm font-black uppercase tracking-wider text-white border-b border-zinc-800 pb-3 flex items-center gap-2">
+          <CreditCard size={18} className="text-vibe-accent" />
+          <span>Prepaid UPI Configuration</span>
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+              Store UPI ID *
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={settings.upiId}
+                onChange={(e) => setSettings({ ...settings, upiId: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent font-mono"
+              />
+              <button
+                onClick={() => saveSingleSetting('upiId', settings.upiId, 'Store UPI ID')}
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-lg"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+              Payee Name (Displayed under QR) *
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={settings.upiPayeeName}
+                onChange={(e) => setSettings({ ...settings, upiPayeeName: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+              />
+              <button
+                onClick={() => saveSingleSetting('upiPayeeName', settings.upiPayeeName, 'Payee Legal Name')}
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-lg"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Customer Support Channels */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6">
+        <h2 className="text-sm font-black uppercase tracking-wider text-white border-b border-zinc-800 pb-3 flex items-center gap-2">
+          <Phone size={18} className="text-vibe-accent" />
+          <span>Support Contact Details</span>
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+              Customer Support & WhatsApp Number
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={settings.supportPhone}
+                onChange={(e) => setSettings({ ...settings, supportPhone: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+              />
+              <button
+                onClick={() => saveSingleSetting('supportPhone', settings.supportPhone, 'Support Phone')}
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-lg"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+              Official Store Email
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={settings.storeEmail}
+                onChange={(e) => setSettings({ ...settings, storeEmail: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+              />
+              <button
+                onClick={() => saveSingleSetting('storeEmail', settings.storeEmail, 'Support Email')}
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-lg"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+              Instagram Profile URL
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={settings.instagramUrl}
+                onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+              />
+              <button
+                onClick={() => saveSingleSetting('instagramUrl', settings.instagramUrl, 'Instagram URL')}
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-lg"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+};

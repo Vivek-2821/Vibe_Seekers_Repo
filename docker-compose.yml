@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vibe-seekers-db
+    environment:
+      POSTGRES_DB: vibeseekers
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vibe-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vibe-seekers-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/vibeseekers
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgrespassword
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
+      ADMIN_EMAIL: vibeseekers09@gmail.com
+      ADMIN_PASSWORD: Admin@Vibe2026!
+      MAIL_USERNAME: vibeseekers09@gmail.com
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      SHIPROCKET_EMAIL: vivekmatne@gmail.com
+      SHIPROCKET_PASSWORD: ${SHIPROCKET_PASSWORD:-}
+      SHIPROCKET_WEBHOOK_TOKEN: ${SHIPROCKET_WEBHOOK_TOKEN:-vibe_seekers_sr_secret_token_2026}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vibe-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vibe-seekers-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - vibe-network
+
+networks:
+  vibe-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
