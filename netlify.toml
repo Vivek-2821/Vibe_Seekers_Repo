@@ -1,0 +1,10 @@
+# The deployable site is the React + Vite single-page app in /frontend.
+# The Spring Boot backend in /backend is hosted separately and is not built here.
+# The command installs dependencies itself so the build works even when no install step ran first.
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
