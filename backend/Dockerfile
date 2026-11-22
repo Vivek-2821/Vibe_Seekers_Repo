@@ -2,9 +2,15 @@
 FROM maven:3.9-eclipse-temurin-17-alpine AS builder
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:resolve dependency:resolve-plugins -B \
+    -Dmaven.wagon.http.retryHandler.count=5 \
+    -Dhttp.keepAlive=false \
+    -Dmaven.wagon.http.pool=false
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -o -B || mvn clean package -DskipTests -B \
+    -Dmaven.wagon.http.retryHandler.count=5 \
+    -Dhttp.keepAlive=false \
+    -Dmaven.wagon.http.pool=false
 
 # Run Stage
 FROM eclipse-temurin:17-jre-alpine
