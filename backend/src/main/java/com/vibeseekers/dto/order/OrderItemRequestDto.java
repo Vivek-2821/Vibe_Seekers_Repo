@@ -1,9 +1,11 @@
 package com.vibeseekers.dto.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderItemRequestDto {
 
     @NotNull(message = "Product ID is required")

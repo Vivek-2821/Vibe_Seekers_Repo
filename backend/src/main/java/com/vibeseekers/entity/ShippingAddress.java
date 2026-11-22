@@ -1,8 +1,10 @@
 package com.vibeseekers.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ShippingAddress {
 
     private String fullName;

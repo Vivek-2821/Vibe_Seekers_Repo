@@ -111,18 +111,30 @@ export const Checkout = () => {
     setIsSubmitting(true);
 
     try {
+      const cleanAddress = {
+        fullName: address.fullName?.trim() || '',
+        mobileNumber: address.mobileNumber?.trim() || '',
+        email: address.email?.trim() || '',
+        houseFlatNo: address.houseFlatNo?.trim() || '',
+        streetAddress: address.streetAddress?.trim() || '',
+        landmark: address.landmark?.trim() || '',
+        city: address.city?.trim() || '',
+        state: address.state?.trim() || '',
+        pincode: address.pincode?.trim() || '',
+      };
+
       const orderPayload = {
         items: items.map((item) => ({
-          productId: item.productId,
-          size: item.size,
-          color: item.color || '',
-          quantity: item.quantity,
+          productId: Number(item.productId),
+          size: String(item.size).toUpperCase(),
+          color: item.color ? String(item.color).trim() : '',
+          quantity: Number(item.quantity) || 1,
         })),
-        shippingAddress: address,
+        shippingAddress: cleanAddress,
         paymentMethod: 'UPI_MANUAL',
         upiTransactionId: upiUtr.trim(),
-        couponCode: appliedCoupon?.code || undefined,
-        discountAmount: discountAmount || undefined,
+        couponCode: appliedCoupon?.code ? appliedCoupon.code.trim().toUpperCase() : null,
+        discountAmount: discountAmount && Number(discountAmount) > 0 ? Number(discountAmount) : 0,
         customerNotes: 'Prepaid streetwear order',
       };
 

@@ -1,12 +1,15 @@
 package com.vibeseekers.dto.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vibeseekers.entity.PaymentMethod;
 import com.vibeseekers.entity.ShippingAddress;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateOrderRequest {
 
     @NotEmpty(message = "Order must contain at least one item")
@@ -23,6 +26,8 @@ public class CreateOrderRequest {
     private String upiTransactionId; // Optional at initial order creation if uploading screenshot or providing in next step
 
     private String couponCode;
+
+    private BigDecimal discountAmount;
 
     private String customerNotes;
 
@@ -67,6 +72,14 @@ public class CreateOrderRequest {
 
     public void setCouponCode(String couponCode) {
         this.couponCode = couponCode;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
     }
 
     public String getCustomerNotes() {
