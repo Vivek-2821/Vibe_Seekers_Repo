@@ -155,6 +155,7 @@ export const Footer = () => {
               <li><Link to="/faq" className="hover:text-white transition-colors">Frequently Asked</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">Our Brand Story</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact Vivek</Link></li>
+              <li><Link to="/admin/login" className="text-zinc-500 hover:text-white transition-colors font-medium">Admin Portal</Link></li>
             </ul>
           </div>
 
@@ -204,6 +205,10 @@ export const Footer = () => {
           </div>
           <div className="flex items-center gap-4 text-zinc-400">
             <span>UPI • PhonePe • Google Pay • Paytm • Cards</span>
+            <span className="text-zinc-700">•</span>
+            <Link to="/admin/login" className="text-zinc-600 hover:text-zinc-300 transition-colors uppercase tracking-widest text-[10px]">
+              Admin Portal
+            </Link>
           </div>
         </div>
       </div>
