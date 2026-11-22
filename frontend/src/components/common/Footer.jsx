@@ -28,11 +28,11 @@ export const Footer = () => {
 
   return (
     <footer className="bg-[#080808] border-t border-zinc-800 text-zinc-400 text-xs">
-      
+
       {/* 1. Value Props Bar */}
       <div className="border-b border-zinc-800/80 py-10 bg-[#0c0c0c]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          
+
           <div className="flex items-start gap-4">
             <div className="p-3 bg-zinc-900 border border-zinc-800 text-white flex-shrink-0">
               <Truck size={20} />
@@ -87,7 +87,7 @@ export const Footer = () => {
       {/* 2. Main Editorial Footer & Newsletter */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10">
-          
+
           {/* Brand Bio & Socials (4 cols) */}
           <div className="lg:col-span-4 space-y-5">
             <Link to="/" className="inline-block">
