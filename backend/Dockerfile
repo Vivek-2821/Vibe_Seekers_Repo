@@ -20,6 +20,6 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 RUN mkdir -p /var/data/uploads && chown -R appuser:appgroup /var/data
 COPY --from=builder /app/target/*.jar app.jar
 USER appuser
-EXPOSE 8080
+EXPOSE 10000
 ENV SPRING_PROFILES_ACTIVE=prod
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-Xmx384m", "-Xms128m", "-Dspring.jmx.enabled=false", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
