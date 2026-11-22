@@ -3,7 +3,6 @@ package com.vibeseekers.dto.shiprocket;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ShiprocketCourierCheckDto {
@@ -14,7 +13,7 @@ public class ShiprocketCourierCheckDto {
 
     @JsonProperty("cod")
     @JsonAlias({"isCod", "cod"})
-    private boolean isCod = false;
+    private boolean cod = false;
 
     public ShiprocketCourierCheckDto() {
     }
@@ -47,23 +46,11 @@ public class ShiprocketCourierCheckDto {
         this.weightKg = weightKg;
     }
 
-    @JsonProperty("cod")
     public boolean isCod() {
-        return isCod;
+        return cod;
     }
 
-    @JsonProperty("isCod")
-    public boolean getIsCod() {
-        return isCod;
-    }
-
-    @JsonSetter
-    @JsonAlias({"isCod", "cod"})
     public void setCod(boolean cod) {
-        isCod = cod;
-    }
-
-    public void setIsCod(boolean cod) {
-        isCod = cod;
+        this.cod = cod;
     }
 }

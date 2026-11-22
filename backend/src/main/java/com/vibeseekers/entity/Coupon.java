@@ -3,7 +3,6 @@ package com.vibeseekers.entity;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,8 +30,10 @@ public class Coupon {
 
     private LocalDateTime expiryDate;
 
+    @JsonProperty("active")
+    @JsonAlias({"isActive", "active"})
     @Column(nullable = false)
-    private boolean isActive = true;
+    private boolean active = true;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -45,7 +46,7 @@ public class Coupon {
         this.minOrderAmount = minOrderAmount;
         this.maxDiscountAmount = maxDiscountAmount;
         this.expiryDate = expiryDate;
-        this.isActive = true;
+        this.active = true;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -97,24 +98,12 @@ public class Coupon {
         this.expiryDate = expiryDate;
     }
 
-    @JsonProperty("active")
     public boolean isActive() {
-        return isActive;
+        return active;
     }
 
-    @JsonProperty("isActive")
-    public boolean getIsActive() {
-        return isActive;
-    }
-
-    @JsonSetter
-    @JsonAlias({"isActive", "active"})
     public void setActive(boolean active) {
-        isActive = active;
-    }
-
-    public void setIsActive(boolean active) {
-        isActive = active;
+        this.active = active;
     }
 
     public LocalDateTime getCreatedAt() {

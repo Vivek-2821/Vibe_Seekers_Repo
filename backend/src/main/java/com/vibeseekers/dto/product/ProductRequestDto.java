@@ -3,7 +3,6 @@ package com.vibeseekers.dto.product;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import com.vibeseekers.entity.ProductCategory;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -36,11 +35,11 @@ public class ProductRequestDto {
 
     @JsonProperty("newArrival")
     @JsonAlias({"isNewArrival", "newArrival"})
-    private boolean isNewArrival = false;
+    private boolean newArrival = false;
 
     @JsonProperty("bestSeller")
     @JsonAlias({"isBestSeller", "bestSeller"})
-    private boolean isBestSeller = false;
+    private boolean bestSeller = false;
 
     private String colors;
 
@@ -52,7 +51,7 @@ public class ProductRequestDto {
 
     @JsonProperty("active")
     @JsonAlias({"isActive", "active"})
-    private boolean isActive = true;
+    private boolean active = true;
 
     private List<SizeStockDto> sizeStocks = new ArrayList<>();
 
@@ -117,34 +116,20 @@ public class ProductRequestDto {
         this.fabricDetails = fabricDetails;
     }
 
-    @JsonProperty("newArrival")
     public boolean isNewArrival() {
-        return isNewArrival;
+        return newArrival;
     }
 
-    @JsonSetter
-    @JsonAlias({"isNewArrival", "newArrival"})
     public void setNewArrival(boolean newArrival) {
-        isNewArrival = newArrival;
+        this.newArrival = newArrival;
     }
 
-    public void setIsNewArrival(boolean newArrival) {
-        isNewArrival = newArrival;
-    }
-
-    @JsonProperty("bestSeller")
     public boolean isBestSeller() {
-        return isBestSeller;
+        return bestSeller;
     }
 
-    @JsonSetter
-    @JsonAlias({"isBestSeller", "bestSeller"})
     public void setBestSeller(boolean bestSeller) {
-        isBestSeller = bestSeller;
-    }
-
-    public void setIsBestSeller(boolean bestSeller) {
-        isBestSeller = bestSeller;
+        this.bestSeller = bestSeller;
     }
 
     public String getColors() {
@@ -179,19 +164,12 @@ public class ProductRequestDto {
         this.collectionName = collectionName;
     }
 
-    @JsonProperty("active")
     public boolean isActive() {
-        return isActive;
+        return active;
     }
 
-    @JsonSetter
-    @JsonAlias({"isActive", "active"})
     public void setActive(boolean active) {
-        isActive = active;
-    }
-
-    public void setIsActive(boolean active) {
-        isActive = active;
+        this.active = active;
     }
 
     public List<SizeStockDto> getSizeStocks() {

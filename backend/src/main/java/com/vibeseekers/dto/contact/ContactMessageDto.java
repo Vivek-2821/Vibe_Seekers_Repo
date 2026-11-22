@@ -3,7 +3,6 @@ package com.vibeseekers.dto.contact;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -30,7 +29,7 @@ public class ContactMessageDto {
 
     @JsonProperty("read")
     @JsonAlias({"isRead", "read"})
-    private boolean isRead;
+    private boolean read;
 
     private LocalDateTime createdAt;
 
@@ -85,24 +84,12 @@ public class ContactMessageDto {
         this.message = message;
     }
 
-    @JsonProperty("read")
     public boolean isRead() {
-        return isRead;
+        return read;
     }
 
-    @JsonProperty("isRead")
-    public boolean getIsRead() {
-        return isRead;
-    }
-
-    @JsonSetter
-    @JsonAlias({"isRead", "read"})
     public void setRead(boolean read) {
-        isRead = read;
-    }
-
-    public void setIsRead(boolean read) {
-        isRead = read;
+        this.read = read;
     }
 
     public LocalDateTime getCreatedAt() {

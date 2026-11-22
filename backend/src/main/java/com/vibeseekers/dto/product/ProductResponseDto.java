@@ -1,5 +1,6 @@
 package com.vibeseekers.dto.product;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vibeseekers.entity.ProductCategory;
@@ -20,13 +21,24 @@ public class ProductResponseDto {
     private Integer discountPercent;
     private String description;
     private String fabricDetails;
-    private boolean isNewArrival;
-    private boolean isBestSeller;
+
+    @JsonProperty("newArrival")
+    @JsonAlias({"isNewArrival", "newArrival"})
+    private boolean newArrival;
+
+    @JsonProperty("bestSeller")
+    @JsonAlias({"isBestSeller", "bestSeller"})
+    private boolean bestSeller;
+
     private String colors;
     private String gsm;
     private String washingInstructions;
     private String collectionName;
-    private boolean isActive;
+
+    @JsonProperty("active")
+    @JsonAlias({"isActive", "active"})
+    private boolean active;
+
     private String primaryImageUrl;
     private int totalStock;
     private List<ProductImageDto> images = new ArrayList<>();
@@ -108,32 +120,20 @@ public class ProductResponseDto {
         this.fabricDetails = fabricDetails;
     }
 
-    @JsonProperty("newArrival")
     public boolean isNewArrival() {
-        return isNewArrival;
-    }
-
-    @JsonProperty("isNewArrival")
-    public boolean getIsNewArrival() {
-        return isNewArrival;
+        return newArrival;
     }
 
     public void setNewArrival(boolean newArrival) {
-        isNewArrival = newArrival;
+        this.newArrival = newArrival;
     }
 
-    @JsonProperty("bestSeller")
     public boolean isBestSeller() {
-        return isBestSeller;
-    }
-
-    @JsonProperty("isBestSeller")
-    public boolean getIsBestSeller() {
-        return isBestSeller;
+        return bestSeller;
     }
 
     public void setBestSeller(boolean bestSeller) {
-        isBestSeller = bestSeller;
+        this.bestSeller = bestSeller;
     }
 
     public String getColors() {
@@ -168,18 +168,12 @@ public class ProductResponseDto {
         this.collectionName = collectionName;
     }
 
-    @JsonProperty("active")
     public boolean isActive() {
-        return isActive;
-    }
-
-    @JsonProperty("isActive")
-    public boolean getIsActive() {
-        return isActive;
+        return active;
     }
 
     public void setActive(boolean active) {
-        isActive = active;
+        this.active = active;
     }
 
     public String getPrimaryImageUrl() {

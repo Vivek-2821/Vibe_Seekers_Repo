@@ -191,14 +191,14 @@ export const ProductDetail = () => {
   const discountPercent = product.discountPercent > 0
     ? product.discountPercent
     : (product.mrp && Number(product.mrp) > Number(product.price)
-        ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
-        : null);
+      ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
+      : null);
 
   const isFavorited = isInWishlist(product.id);
 
   return (
     <div className="bg-[#080808] min-h-screen text-white pb-24">
-      
+
       {/* Breadcrumb Bar */}
       <div className="border-b border-zinc-800/80 bg-[#0d0d0d] py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-xs text-zinc-400 flex items-center gap-2 uppercase tracking-wider">
@@ -212,10 +212,10 @@ export const ProductDetail = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
-          
+
           {/* Left Column: Image Gallery (7 cols) */}
           <div className="lg:col-span-7 flex flex-col-reverse sm:flex-row gap-4">
-            
+
             {/* Thumbnail Strip */}
             {images.length > 1 && (
               <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto sm:w-24 flex-shrink-0">
@@ -223,9 +223,8 @@ export const ProductDetail = () => {
                   <button
                     key={idx}
                     onClick={() => setSelectedImageIndex(idx)}
-                    className={`aspect-[3/4] w-16 sm:w-full overflow-hidden border transition-all flex-shrink-0 bg-zinc-950 ${
-                      selectedImageIndex === idx ? 'border-white' : 'border-zinc-800 opacity-60 hover:opacity-100'
-                    }`}
+                    className={`aspect-[3/4] w-16 sm:w-full overflow-hidden border transition-all flex-shrink-0 bg-zinc-950 ${selectedImageIndex === idx ? 'border-white' : 'border-zinc-800 opacity-60 hover:opacity-100'
+                      }`}
                   >
                     <img src={img} alt={`${product.name} view ${idx + 1}`} className="w-full h-full object-cover" />
                   </button>
@@ -274,7 +273,7 @@ export const ProductDetail = () => {
 
           {/* Right Column: Product Purchasing Suite (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
-            
+
             {/* Category & Title */}
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
@@ -318,11 +317,10 @@ export const ProductDetail = () => {
                         setSelectedColor(col);
                         setValidationError('');
                       }}
-                      className={`px-3.5 py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
-                        selectedColor === col
-                          ? 'bg-white text-black border-white'
-                          : 'bg-[#121212] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
-                      }`}
+                      className={`px-3.5 py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${selectedColor === col
+                        ? 'bg-white text-black border-white'
+                        : 'bg-[#121212] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                        }`}
                     >
                       {col}
                     </button>
@@ -360,13 +358,12 @@ export const ProductDetail = () => {
                         setSelectedSize(sz);
                         setValidationError('');
                       }}
-                      className={`py-3 text-xs font-extrabold uppercase tracking-wider border transition-all ${
-                        selectedSize === sz
-                          ? 'bg-white text-black border-white'
-                          : isOutOfStock
+                      className={`py-3 text-xs font-extrabold uppercase tracking-wider border transition-all ${selectedSize === sz
+                        ? 'bg-white text-black border-white'
+                        : isOutOfStock
                           ? 'bg-zinc-950 text-zinc-600 border-zinc-900 cursor-not-allowed line-through'
                           : 'bg-[#121212] text-zinc-300 border-zinc-800 hover:border-zinc-500 hover:text-white'
-                      }`}
+                        }`}
                     >
                       {sz}
                     </button>

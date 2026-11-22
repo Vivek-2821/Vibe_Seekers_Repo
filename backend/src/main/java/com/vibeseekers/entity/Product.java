@@ -166,6 +166,7 @@ public class Product {
         return isBestSeller != null && isBestSeller;
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public Boolean getIsBestSeller() {
         return isBestSeller != null && isBestSeller;
     }
@@ -174,6 +175,7 @@ public class Product {
         this.isBestSeller = bestSeller != null ? bestSeller : false;
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public void setIsBestSeller(Boolean bestSeller) {
         this.isBestSeller = bestSeller != null ? bestSeller : false;
     }
