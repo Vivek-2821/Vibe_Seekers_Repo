@@ -86,7 +86,8 @@ public class MailService {
         String subject = "VIBE SEEKERS — Payment Verified for #" + order.getOrderNumber();
         String htmlContent = "<div style='background-color:#0a0a0a; color:#ffffff; padding:30px; font-family:sans-serif;'>"
                 + "<h1 style='color:#ff4d00; text-transform:uppercase;'>Payment Verified</h1>"
-                + "<p>Great news! Your payment of <strong>₹" + order.getTotalAmount() + "</strong> for Order <strong>#" + order.getOrderNumber() + "</strong> has been approved.</p>"
+                + "<p>Great news! Your payment of <strong>₹" + order.getTotalAmount() + "</strong> for Order <strong>#"
+                + order.getOrderNumber() + "</strong> has been approved.</p>"
                 + "<p>Our warehouse team is now packing your fresh streetwear drip. We will notify you with the Shiprocket AWB tracking link as soon as it is dispatched.</p>"
                 + "<hr style='border:1px solid #27272a; margin:20px 0;'/>"
                 + "<p style='color:#a1a1aa; font-size:12px;'>VIBE SEEKERS | vibeseekers09@gmail.com | +91 9860498749</p>"
@@ -111,7 +112,8 @@ public class MailService {
         log.info("To: {}", toEmail);
         log.info("Subject: {}", subject);
         log.info("From: {} ({})", fromEmail, senderName);
-        log.info("Content preview: {}", htmlContent.replaceAll("<[^>]*>", " ").replaceAll("\\s+", " ").trim().substring(0, Math.min(180, htmlContent.length())));
+        log.info("Content preview: {}", htmlContent.replaceAll("<[^>]*>", " ").replaceAll("\\s+", " ").trim()
+                .substring(0, Math.min(180, htmlContent.length())));
         log.info("===========================================================");
     }
 
@@ -121,7 +123,8 @@ public class MailService {
 
             Map<String, String> sender = new HashMap<>();
             sender.put("name", (senderName != null && !senderName.isBlank()) ? senderName.trim() : "Vibe Seekers");
-            sender.put("email", (fromEmail != null && !fromEmail.isBlank()) ? fromEmail.trim() : "vibeseekers09@gmail.com");
+            sender.put("email",
+                    (fromEmail != null && !fromEmail.isBlank()) ? fromEmail.trim() : "vibeseekers09@gmail.com");
             payload.put("sender", sender);
 
             List<Map<String, String>> toList = new ArrayList<>();
@@ -144,7 +147,8 @@ public class MailService {
                     .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            HttpResponse<String> response = httpClient.send(request,
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             int statusCode = response.statusCode();
 
             if (statusCode >= 200 && statusCode < 300) {
@@ -162,7 +166,8 @@ public class MailService {
         } catch (HttpTimeoutException e) {
             log.error("Brevo API request timed out after 10s when sending to {}: {}", toEmail, e.getMessage());
             if (failOnError) {
-                throw new BadRequestException("Email service timed out while sending verification code. Please try again.");
+                throw new BadRequestException(
+                        "Email service timed out while sending verification code. Please try again.");
             }
         } catch (Exception e) {
             log.error("Failed to send email to {} via Brevo API: {}", toEmail, e.getMessage());
@@ -176,7 +181,8 @@ public class MailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, (senderName != null && !senderName.isBlank()) ? senderName.trim() : "Vibe Seekers");
+            helper.setFrom(fromEmail,
+                    (senderName != null && !senderName.isBlank()) ? senderName.trim() : "Vibe Seekers");
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
@@ -209,8 +215,10 @@ public class MailService {
                 + "<h2 style='letter-spacing:4px; font-size:26px; margin-bottom:10px; color:#ffffff;'>VIBE SEEKERS</h2>"
                 + "<p style='color:#ff4d00; font-size:14px; text-transform:uppercase; letter-spacing:2px; font-weight:bold;'>AUTHENTIC INDIAN STREETWEAR</p>"
                 + "<div style='margin:30px 0; background-color:#121212; border:1px solid #27272a; border-radius:8px; padding:25px;'>"
-                + "<p style='font-size:15px; color:#a1a1aa; margin-top:0;'>Your single-use 6-digit verification code for " + purpose.toLowerCase().replace('_', ' ') + " is:</p>"
-                + "<h1 style='font-size:42px; letter-spacing:10px; color:#ffffff; margin:15px 0; font-family:monospace;'>" + otpCode + "</h1>"
+                + "<p style='font-size:15px; color:#a1a1aa; margin-top:0;'>Your single-use 6-digit verification code for "
+                + purpose.toLowerCase().replace('_', ' ') + " is:</p>"
+                + "<h1 style='font-size:42px; letter-spacing:10px; color:#ffffff; margin:15px 0; font-family:monospace;'>"
+                + otpCode + "</h1>"
                 + "<p style='color:#a1a1aa; font-size:13px; margin-bottom:0;'>This code expires in <strong>5 minutes</strong>. Never share this OTP with anyone.</p>"
                 + "</div>"
                 + "<p style='color:#71717a; font-size:12px;'>If you did not request this verification, please ignore this email or contact support at vibeseekers09@gmail.com.</p>"
@@ -221,12 +229,16 @@ public class MailService {
         return "<div style='background-color:#0a0a0a; color:#ffffff; padding:40px; font-family:Arial, sans-serif; max-width:600px; margin:0 auto; border:1px solid #27272a; border-radius:12px;'>"
                 + "<h2 style='letter-spacing:4px; color:#ffffff; margin-bottom:5px;'>VIBE SEEKERS</h2>"
                 + "<p style='color:#ff4d00; font-size:14px; text-transform:uppercase; letter-spacing:1px; margin-top:0;'>Order Confirmed</p>"
-                + "<p>Thank you for shopping with Vibe Seekers. We have received your order <strong>#" + order.getOrderNumber() + "</strong>.</p>"
+                + "<p>Thank you for shopping with Vibe Seekers. We have received your order <strong>#"
+                + order.getOrderNumber() + "</strong>.</p>"
                 + "<div style='background-color:#121212; border:1px solid #27272a; padding:15px; border-radius:8px; margin:20px 0;'>"
                 + "<p style='margin:5px 0;'><strong>Total Amount:</strong> ₹" + order.getTotalAmount() + "</p>"
-                + "<p style='margin:5px 0;'><strong>Payment Method:</strong> " + order.getPayment().getPaymentMethod() + "</p>"
-                + "<p style='margin:5px 0;'><strong>Payment Status:</strong> " + order.getPayment().getPaymentStatus() + "</p>"
-                + "<p style='margin:5px 0;'><strong>Shipping To:</strong> " + order.getShippingAddress().getFormattedAddress() + "</p>"
+                + "<p style='margin:5px 0;'><strong>Payment Method:</strong> " + order.getPayment().getPaymentMethod()
+                + "</p>"
+                + "<p style='margin:5px 0;'><strong>Payment Status:</strong> " + order.getPayment().getPaymentStatus()
+                + "</p>"
+                + "<p style='margin:5px 0;'><strong>Shipping To:</strong> "
+                + order.getShippingAddress().getFormattedAddress() + "</p>"
                 + "</div>"
                 + "<p style='color:#a1a1aa; font-size:13px;'>Note: Returns are currently unavailable. Please contact WhatsApp support (+91 9860498749) for any shipping inquiries.</p>"
                 + "</div>";
