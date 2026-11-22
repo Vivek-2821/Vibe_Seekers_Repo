@@ -1,0 +1,9 @@
+{
+  "name": "vibe-seekers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vibe Seekers Monorepo Root",
+  "scripts": {
+    "build": "npm --prefix frontend run build"
+  }
+}

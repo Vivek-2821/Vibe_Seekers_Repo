@@ -142,7 +142,7 @@ export const Auth = () => {
   return (
     <div className="bg-[#080808] min-h-[85vh] flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8 text-white">
       <div className="max-w-md w-full bg-[#121212] border border-zinc-800 p-8 sm:p-10 space-y-6 shadow-2xl relative">
-        
+
         {/* Brand Logo & Title */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-block">
@@ -379,7 +379,7 @@ export const Auth = () => {
                 disabled={loading}
                 className="text-xs text-zinc-400 hover:text-white underline"
               >
-                Didn't receive code? Resend Email OTP
+                Didn&apos;t receive code? Resend Email OTP
               </button>
             </div>
           </form>
@@ -422,7 +422,7 @@ export const Auth = () => {
         {mode === 'reset' && (
           <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
             <div className="p-3 bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 space-y-1">
-              <p className="font-semibold text-white">We've sent a 6-digit password reset code to:</p>
+              <p className="font-semibold text-white">We&apos;ve sent a 6-digit password reset code to:</p>
               <p className="font-mono text-zinc-200">{email}</p>
               <p className="text-zinc-400 text-[11px] pt-1">
                 Please check your inbox (and spam/junk folder) and enter your code below.
@@ -473,7 +473,7 @@ export const Auth = () => {
         <div className="pt-4 border-t border-zinc-800 text-center text-xs text-zinc-400">
           {mode === 'login' ? (
             <p>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button
                 type="button"
                 onClick={() => {
