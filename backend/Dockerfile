@@ -1,14 +1,14 @@
 # Build Stage
 FROM maven:3.9-eclipse-temurin-17-alpine AS builder
 WORKDIR /app
-COPY settings.xml /root/.m2/settings.xml
+COPY settings.xml .
 COPY pom.xml .
-RUN mvn dependency:resolve dependency:resolve-plugins -B \
+RUN mvn -s settings.xml dependency:resolve dependency:resolve-plugins -B \
     -Dmaven.wagon.http.retryHandler.count=5 \
     -Dhttp.keepAlive=false \
     -Dmaven.wagon.http.pool=false
 COPY src ./src
-RUN mvn clean package -DskipTests -o -B || mvn clean package -DskipTests -B \
+RUN mvn -s settings.xml clean package -DskipTests -o -B || mvn -s settings.xml clean package -DskipTests -B \
     -Dmaven.wagon.http.retryHandler.count=5 \
     -Dhttp.keepAlive=false \
     -Dmaven.wagon.http.pool=false
