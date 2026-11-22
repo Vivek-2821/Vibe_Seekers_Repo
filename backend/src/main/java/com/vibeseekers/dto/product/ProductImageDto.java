@@ -8,7 +8,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ProductImageDto {
 
     private Long id;
+
+    @JsonProperty("imageUrl")
+    @JsonAlias({"url", "imageUrl", "secure_url"})
     private String imageUrl;
+
     private String publicId;
 
     @JsonProperty("primary")
@@ -42,6 +46,17 @@ public class ProductImageDto {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    @JsonProperty("url")
+    public String getUrl() {
+        return imageUrl;
+    }
+
+    public void setUrl(String url) {
+        if (this.imageUrl == null || this.imageUrl.isEmpty()) {
+            this.imageUrl = url;
+        }
     }
 
     public String getPublicId() {

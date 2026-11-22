@@ -16,6 +16,7 @@ import {
   Info,
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
+import { resolveImageUrl } from '../../utils/imageUrl';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { SizeGuideModal } from '../../components/shop/SizeGuideModal';
@@ -78,7 +79,7 @@ export const ProductDetail = () => {
               slug: data.slug,
               price: data.price,
               mrp: data.mrp,
-              primaryImageUrl: data.primaryImageUrl || data.images?.[0]?.imageUrl,
+              primaryImageUrl: resolveImageUrl(data.primaryImageUrl || data.imageUrl || data.images?.[0]?.imageUrl || data.images?.[0]?.url, 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800'),
               category: data.category,
               gsm: data.gsm,
             },
@@ -131,9 +132,10 @@ export const ProductDetail = () => {
     );
   }
 
+  const fallbackImg = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800';
   const images = product.images?.length > 0
-    ? product.images.map((img) => img.imageUrl)
-    : [product.primaryImageUrl || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800'];
+    ? product.images.map((img) => resolveImageUrl(img.imageUrl || img.url, fallbackImg))
+    : [resolveImageUrl(product.primaryImageUrl || product.imageUrl, fallbackImg)];
 
   const colorOptions = product.colors
     ? product.colors.split(',').map((c) => c.trim()).filter(Boolean)

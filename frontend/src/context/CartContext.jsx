@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosInstance';
+import { resolveImageUrl } from '../utils/imageUrl';
 
 const CartContext = createContext(null);
 
@@ -79,7 +80,7 @@ export const CartProvider = ({ children }) => {
           size: chosenSize,
           color: chosenColor,
           quantity,
-          imageUrl: product.primaryImageUrl || (product.images?.[0]?.imageUrl ?? ''),
+          imageUrl: resolveImageUrl(product.primaryImageUrl || product.imageUrl || (product.images?.[0]?.imageUrl ?? product.images?.[0]?.url ?? '')),
         },
       ];
     });

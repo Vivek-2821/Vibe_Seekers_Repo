@@ -4,6 +4,7 @@ import { Copy, Check, ShieldAlert, ArrowRight, Upload, QrCode, CreditCard, Ban, 
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const Checkout = () => {
   const { user } = useAuth();
@@ -543,6 +544,35 @@ export const Checkout = () => {
                   </div>
                 )}
               </div>
+
+              {/* Order Items Breakdown */}
+              {items && items.length > 0 && (
+                <div className="border-t border-zinc-800 pt-3 space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-1">
+                    Order Items ({items.reduce((acc, it) => acc + (it.quantity || 1), 0)}):
+                  </span>
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                    {items.map((item) => (
+                      <div key={`${item.productId}-${item.size}-${item.color}`} className="flex items-center gap-3 bg-black/60 p-2 border border-zinc-900">
+                        <img
+                          src={resolveImageUrl(item.imageUrl, '/assets/logo.png')}
+                          alt={item.name}
+                          className="w-10 h-12 object-cover bg-zinc-950 border border-zinc-800 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0 text-xs">
+                          <p className="font-bold text-white truncate">{item.name}</p>
+                          <p className="text-[11px] text-zinc-400">
+                            Size: {item.size} {item.color ? `• ${item.color}` : ''} • Qty: {item.quantity}
+                          </p>
+                        </div>
+                        <span className="text-xs font-bold text-zinc-300">
+                          ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Summary totals */}
               <div className="border-t border-zinc-800 pt-4 space-y-2 text-xs text-zinc-400">

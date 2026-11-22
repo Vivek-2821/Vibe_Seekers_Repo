@@ -16,6 +16,7 @@ import {
   Tag,
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
+import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const Products = () => {
   const [products, setProducts] = useState([]);
@@ -295,9 +296,18 @@ export const Products = () => {
         sizeStocks: sizeStockArray,
         existingImages: existingImages.map((img, idx) => ({
           id: img.id,
-          imageUrl: img.imageUrl,
+          imageUrl: img.imageUrl || img.url || img.secure_url,
+          url: img.imageUrl || img.url || img.secure_url,
           publicId: img.publicId,
-          primary: img.primary,
+          primary: img.primary ?? img.isPrimary ?? false,
+          displayOrder: idx,
+        })),
+        images: existingImages.map((img, idx) => ({
+          id: img.id,
+          imageUrl: img.imageUrl || img.url || img.secure_url,
+          url: img.imageUrl || img.url || img.secure_url,
+          publicId: img.publicId,
+          primary: img.primary ?? img.isPrimary ?? false,
           displayOrder: idx,
         })),
       };
@@ -437,7 +447,7 @@ export const Products = () => {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <img
-                          src={p.primaryImageUrl || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800'}
+                          src={resolveImageUrl(p.primaryImageUrl || p.imageUrl || p.images?.[0]?.imageUrl || p.images?.[0]?.url, 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800')}
                           alt={p.name}
                           className="w-12 h-14 object-cover rounded-lg bg-zinc-950 shrink-0"
                         />
@@ -854,7 +864,7 @@ export const Products = () => {
                       key={img.id}
                       className="relative aspect-square rounded-lg overflow-hidden border border-zinc-700 group bg-zinc-900"
                     >
-                      <img src={img.imageUrl} alt="Uploaded" className="w-full h-full object-cover" />
+                      <img src={resolveImageUrl(img.imageUrl || img.url || img.secure_url)} alt="Uploaded" className="w-full h-full object-cover" />
                       <div className="absolute top-1 left-1 flex gap-1">
                         <button
                           type="button"

@@ -135,6 +135,26 @@ public class ProductService {
         // Save size stocks
         saveSizeStocks(savedProduct, request.getSizeStocks());
 
+        // Save pre-provided image URLs if present
+        if (request.getExistingImages() != null && !request.getExistingImages().isEmpty()) {
+            for (int i = 0; i < request.getExistingImages().size(); i++) {
+                ProductImageDto imgDto = request.getExistingImages().get(i);
+                String imgUrl = imgDto.getImageUrl() != null && !imgDto.getImageUrl().trim().isEmpty()
+                        ? imgDto.getImageUrl().trim()
+                        : (imgDto.getUrl() != null ? imgDto.getUrl().trim() : null);
+                if (imgUrl != null && !imgUrl.isEmpty()) {
+                    ProductImage pImg = new ProductImage(
+                            savedProduct,
+                            imgUrl,
+                            imgDto.getPublicId(),
+                            imgDto.isPrimary() || i == 0,
+                            i
+                    );
+                    productImageRepository.save(pImg);
+                }
+            }
+        }
+
         // Process uploaded images
         processUploadedImages(savedProduct, imageFiles);
 

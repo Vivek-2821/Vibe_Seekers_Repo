@@ -143,4 +143,64 @@ public class JacksonDtoMappingTest {
         AuthResponse res = objectMapper.readValue(json, AuthResponse.class);
         assertTrue(res.isVerified());
     }
+
+    @Test
+    public void testProductImageDtoUrls() throws Exception {
+        // Deserialization with "url"
+        String jsonWithUrl = "{\"id\": 1, \"url\": \"https://res.cloudinary.com/test/img1.jpg\", \"primary\": true}";
+        ProductImageDto dto1 = objectMapper.readValue(jsonWithUrl, ProductImageDto.class);
+        assertEquals("https://res.cloudinary.com/test/img1.jpg", dto1.getImageUrl());
+        assertEquals("https://res.cloudinary.com/test/img1.jpg", dto1.getUrl());
+
+        // Deserialization with "secure_url"
+        String jsonWithSecureUrl = "{\"id\": 2, \"secure_url\": \"https://res.cloudinary.com/test/img2.jpg\", \"primary\": false}";
+        ProductImageDto dto2 = objectMapper.readValue(jsonWithSecureUrl, ProductImageDto.class);
+        assertEquals("https://res.cloudinary.com/test/img2.jpg", dto2.getImageUrl());
+        assertEquals("https://res.cloudinary.com/test/img2.jpg", dto2.getUrl());
+
+        // Serialization produces both imageUrl and url
+        String serialized = objectMapper.writeValueAsString(dto1);
+        assertTrue(serialized.contains("\"imageUrl\""));
+        assertTrue(serialized.contains("\"url\""));
+    }
+
+    @Test
+    public void testProductResponseDtoImageUrls() throws Exception {
+        ProductResponseDto dto = new ProductResponseDto();
+        dto.setId(25L);
+        dto.setName("Retro Baggy Denim");
+        dto.setPrimaryImageUrl("https://res.cloudinary.com/test/denim.jpg");
+
+        String serialized = objectMapper.writeValueAsString(dto);
+        assertTrue(serialized.contains("\"primaryImageUrl\""));
+        assertTrue(serialized.contains("\"imageUrl\""));
+        assertTrue(serialized.contains("\"url\""));
+
+        ProductResponseDto deserialized = objectMapper.readValue(serialized, ProductResponseDto.class);
+        assertEquals("https://res.cloudinary.com/test/denim.jpg", deserialized.getPrimaryImageUrl());
+        assertEquals("https://res.cloudinary.com/test/denim.jpg", deserialized.getImageUrl());
+        assertEquals("https://res.cloudinary.com/test/denim.jpg", deserialized.getUrl());
+    }
+
+    @Test
+    public void testProductRequestDtoImagesAlias() throws Exception {
+        String json = """
+            {
+              "name": "Cargo Pants",
+              "category": "JACKETS",
+              "price": 1999.0,
+              "description": "Tactical Cargo Pants",
+              "images": [
+                {
+                  "url": "https://res.cloudinary.com/test/cargo.jpg",
+                  "primary": true
+                }
+              ]
+            }
+            """;
+        ProductRequestDto dto = objectMapper.readValue(json, ProductRequestDto.class);
+        assertNotNull(dto.getExistingImages());
+        assertEquals(1, dto.getExistingImages().size());
+        assertEquals("https://res.cloudinary.com/test/cargo.jpg", dto.getExistingImages().get(0).getImageUrl());
+    }
 }

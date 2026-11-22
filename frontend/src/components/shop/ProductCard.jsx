@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Heart, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const ProductCard = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState(() => {
@@ -28,8 +29,12 @@ export const ProductCard = ({ product }) => {
   const { addItem } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
-  const primaryImage = product.primaryImageUrl || product.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800';
-  const secondaryImage = product.images?.[1]?.imageUrl || primaryImage;
+  const rawPrimary = product.primaryImageUrl || product.imageUrl || product.images?.[0]?.imageUrl || product.images?.[0]?.url;
+  const rawSecondary = product.images?.[1]?.imageUrl || product.images?.[1]?.url || rawPrimary;
+  const fallbackImg = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800';
+
+  const primaryImage = resolveImageUrl(rawPrimary, fallbackImg);
+  const secondaryImage = resolveImageUrl(rawSecondary, primaryImage);
 
   const handleAddToCart = (e) => {
     e.preventDefault();

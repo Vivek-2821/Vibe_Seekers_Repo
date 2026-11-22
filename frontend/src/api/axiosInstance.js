@@ -1,9 +1,12 @@
 import axios from 'axios';
+import { resolveImageUrl } from '../utils/imageUrl';
 
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   'https://vibeseekers-api.onrender.com';
+
+export { resolveImageUrl };
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -64,4 +67,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-export { API_BASE_URL };

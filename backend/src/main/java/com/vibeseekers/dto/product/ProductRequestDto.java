@@ -55,6 +55,8 @@ public class ProductRequestDto {
 
     private List<SizeStockDto> sizeStocks = new ArrayList<>();
 
+    @JsonProperty("existingImages")
+    @JsonAlias({"images", "existingImages"})
     private List<ProductImageDto> existingImages = new ArrayList<>();
 
     public ProductRequestDto() {

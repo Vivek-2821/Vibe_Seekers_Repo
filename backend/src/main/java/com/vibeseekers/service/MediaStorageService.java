@@ -24,6 +24,15 @@ public class MediaStorageService {
 
     private final Cloudinary cloudinary;
 
+    @Value("${app.cloudinary.cloud-name:}")
+    private String cloudName;
+
+    @Value("${app.cloudinary.api-key:}")
+    private String apiKey;
+
+    @Value("${app.cloudinary.api-secret:}")
+    private String apiSecret;
+
     @Value("${app.media.upload-dir:./uploads}")
     private String localUploadDir;
 
@@ -60,13 +69,12 @@ public class MediaStorageService {
     public UploadResult storeFile(MultipartFile file, String folder) {
         validateFile(file);
 
-        // Check if Cloudinary is configured
-        boolean hasCloudinary = cloudinary.config.apiKey != null && !cloudinary.config.apiKey.isEmpty();
-
-        if (hasCloudinary) {
+        // Check if Cloudinary is configured via environment or bean
+        if (isCloudinaryConfigured()) {
+            Cloudinary target = getEffectiveCloudinary();
             try {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> uploadResult = cloudinary.uploader().upload(
+                Map<String, Object> uploadResult = target.uploader().upload(
                         file.getBytes(),
                         ObjectUtils.asMap(
                                 "folder", "vibe-seekers/" + folder,
@@ -77,13 +85,46 @@ public class MediaStorageService {
                 String publicId = (String) uploadResult.get("public_id");
                 log.info("Uploaded image to Cloudinary: {}", secureUrl);
                 return new UploadResult(secureUrl, publicId);
-            } catch (IOException e) {
-                log.error("Cloudinary upload failed, falling back to local storage: {}", e.getMessage());
+            } catch (Exception e) {
+                log.error("Cloudinary upload failed: {}", e.getMessage(), e);
+                throw new BadRequestException("Failed to upload image to Cloudinary: " + e.getMessage());
             }
         }
 
-        // Local storage fallback for dev / tests
+        // Local storage fallback for dev / tests only when Cloudinary env vars are blank
+        log.info("Cloudinary env vars are blank; falling back to local file storage for folder: {}", folder);
         return storeLocally(file, folder);
+    }
+
+    private boolean isCloudinaryConfigured() {
+        if (cloudinary != null && cloudinary.config != null
+                && isNonEmpty(cloudinary.config.apiKey)
+                && isNonEmpty(cloudinary.config.apiSecret)
+                && isNonEmpty(cloudinary.config.cloudName)) {
+            return true;
+        }
+        return isNonEmpty(cloudName) && isNonEmpty(apiKey) && isNonEmpty(apiSecret);
+    }
+
+    private boolean isNonEmpty(String s) {
+        return s != null && !s.trim().isEmpty();
+    }
+
+    private Cloudinary getEffectiveCloudinary() {
+        if (cloudinary != null && cloudinary.config != null
+                && isNonEmpty(cloudinary.config.apiKey)
+                && isNonEmpty(cloudinary.config.apiSecret)
+                && isNonEmpty(cloudinary.config.cloudName)) {
+            return cloudinary;
+        }
+        if (isNonEmpty(cloudName) && isNonEmpty(apiKey) && isNonEmpty(apiSecret)) {
+            Map<String, String> config = new HashMap<>();
+            config.put("cloud_name", cloudName.trim());
+            config.put("api_key", apiKey.trim());
+            config.put("api_secret", apiSecret.trim());
+            return new Cloudinary(config);
+        }
+        return null;
     }
 
     private UploadResult storeLocally(MultipartFile file, String folder) {
@@ -112,13 +153,15 @@ public class MediaStorageService {
     public void deleteFile(String publicId) {
         if (publicId == null || publicId.isEmpty()) return;
 
-        boolean hasCloudinary = cloudinary.config.apiKey != null && !cloudinary.config.apiKey.isEmpty();
-        if (hasCloudinary) {
-            try {
-                cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
-                log.info("Deleted image from Cloudinary: {}", publicId);
-            } catch (Exception e) {
-                log.warn("Failed to delete image from Cloudinary: {}", e.getMessage());
+        if (isCloudinaryConfigured()) {
+            Cloudinary target = getEffectiveCloudinary();
+            if (target != null) {
+                try {
+                    target.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                    log.info("Deleted image from Cloudinary: {}", publicId);
+                } catch (Exception e) {
+                    log.warn("Failed to delete image from Cloudinary: {}", e.getMessage());
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Tag, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const Cart = () => {
   const {
@@ -101,7 +102,7 @@ export const Cart = () => {
                   className="w-20 sm:w-28 aspect-[3/4] bg-zinc-950 border border-zinc-800 shrink-0 overflow-hidden"
                 >
                   <img
-                    src={item.imageUrl || '/assets/logo.png'}
+                    src={resolveImageUrl(item.imageUrl, '/assets/logo.png')}
                     alt={item.name}
                     className="w-full h-full object-cover"
                   />

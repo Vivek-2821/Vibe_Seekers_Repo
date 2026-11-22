@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Tag, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const CartDrawer = () => {
   const {
@@ -109,7 +110,7 @@ export const CartDrawer = () => {
                 items.map((item) => (
                   <div key={`${item.productId}-${item.size}-${item.color}`} className="py-4 flex gap-4">
                     <img
-                      src={item.imageUrl || '/assets/logo.png'}
+                      src={resolveImageUrl(item.imageUrl, '/assets/logo.png')}
                       alt={item.name}
                       className="w-20 h-24 object-cover rounded bg-zinc-900 border border-zinc-800 flex-shrink-0"
                     />

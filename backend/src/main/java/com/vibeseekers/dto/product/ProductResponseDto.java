@@ -39,6 +39,8 @@ public class ProductResponseDto {
     @JsonAlias({"isActive", "active"})
     private boolean active;
 
+    @JsonProperty("primaryImageUrl")
+    @JsonAlias({"primaryImageUrl", "imageUrl", "url"})
     private String primaryImageUrl;
     private int totalStock;
     private List<ProductImageDto> images = new ArrayList<>();
@@ -182,6 +184,28 @@ public class ProductResponseDto {
 
     public void setPrimaryImageUrl(String primaryImageUrl) {
         this.primaryImageUrl = primaryImageUrl;
+    }
+
+    @JsonProperty("imageUrl")
+    public String getImageUrl() {
+        return primaryImageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        if (this.primaryImageUrl == null || this.primaryImageUrl.isEmpty()) {
+            this.primaryImageUrl = imageUrl;
+        }
+    }
+
+    @JsonProperty("url")
+    public String getUrl() {
+        return primaryImageUrl;
+    }
+
+    public void setUrl(String url) {
+        if (this.primaryImageUrl == null || this.primaryImageUrl.isEmpty()) {
+            this.primaryImageUrl = url;
+        }
     }
 
     public int getTotalStock() {
