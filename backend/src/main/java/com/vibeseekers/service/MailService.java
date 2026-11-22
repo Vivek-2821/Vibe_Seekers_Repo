@@ -1,42 +1,76 @@
 package com.vibeseekers.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vibeseekers.entity.Order;
+import com.vibeseekers.exception.BadRequestException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class MailService {
 
     private static final Logger log = LoggerFactory.getLogger(MailService.class);
+    private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
     private final JavaMailSender mailSender;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
-    @Value("${spring.mail.username:vibeseekers09@gmail.com}")
+    @Value("${app.brevo.api-key:${BREVO_API_KEY:}}")
+    private String brevoApiKey;
+
+    @Value("${spring.mail.username:${MAIL_USERNAME:vibeseekers09@gmail.com}}")
     private String fromEmail;
 
     @Value("${spring.mail.password:}")
     private String mailPassword;
 
-    public MailService(JavaMailSender mailSender) {
+    @Value("${app.brevo.sender-name:Vibe Seekers}")
+    private String senderName;
+
+    public MailService(@Autowired(required = false) JavaMailSender mailSender) {
         this.mailSender = mailSender;
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        this.objectMapper = new ObjectMapper();
     }
 
     public boolean isMailConfigured() {
-        return mailPassword != null && !mailPassword.trim().isEmpty();
+        boolean hasBrevo = brevoApiKey != null && !brevoApiKey.trim().isEmpty();
+        boolean hasSmtp = mailPassword != null && !mailPassword.trim().isEmpty();
+        return hasBrevo || hasSmtp;
     }
 
-    @Async
+    public boolean isBrevoConfigured() {
+        return brevoApiKey != null && !brevoApiKey.trim().isEmpty();
+    }
+
     public void sendOtpEmail(String toEmail, String otpCode, String purpose) {
         String subject = "VIBE SEEKERS — Verification Code: " + otpCode;
         String htmlContent = buildOtpEmailHtml(otpCode, purpose);
 
-        sendEmail(toEmail, subject, htmlContent);
+        sendEmail(toEmail, subject, htmlContent, true);
     }
 
     @Async
@@ -44,7 +78,7 @@ public class MailService {
         String subject = "VIBE SEEKERS — Order Placed #" + order.getOrderNumber();
         String htmlContent = buildOrderEmailHtml(order);
 
-        sendEmail(order.getShippingAddress().getEmail(), subject, htmlContent);
+        sendEmail(order.getShippingAddress().getEmail(), subject, htmlContent, false);
     }
 
     @Async
@@ -58,33 +92,116 @@ public class MailService {
                 + "<p style='color:#a1a1aa; font-size:12px;'>VIBE SEEKERS | vibeseekers09@gmail.com | +91 9860498749</p>"
                 + "</div>";
 
-        sendEmail(order.getShippingAddress().getEmail(), subject, htmlContent);
+        sendEmail(order.getShippingAddress().getEmail(), subject, htmlContent, false);
     }
 
-    private void sendEmail(String toEmail, String subject, String htmlContent) {
-        // If password is not set, log gracefully (convenient for local dev & testing)
-        if (mailPassword == null || mailPassword.trim().isEmpty()) {
-            log.info("============== [MOCK EMAIL SENT] ==============");
-            log.info("To: {}", toEmail);
-            log.info("Subject: {}", subject);
-            log.info("From: {}", fromEmail);
-            log.info("Content preview: {}", htmlContent.replaceAll("<[^>]*>", " ").substring(0, Math.min(180, htmlContent.length())));
-            log.info("===============================================");
+    private void sendEmail(String toEmail, String subject, String htmlContent, boolean failOnError) {
+        if (isBrevoConfigured()) {
+            sendEmailViaBrevo(toEmail, subject, htmlContent, failOnError);
             return;
         }
 
+        if (mailPassword != null && !mailPassword.trim().isEmpty() && mailSender != null) {
+            sendEmailViaSmtp(toEmail, subject, htmlContent, failOnError);
+            return;
+        }
+
+        // Local development & testing fallback (mock email logged)
+        log.info("============== [MOCK EMAIL SENT (Local Dev)] ==============");
+        log.info("To: {}", toEmail);
+        log.info("Subject: {}", subject);
+        log.info("From: {} ({})", fromEmail, senderName);
+        log.info("Content preview: {}", htmlContent.replaceAll("<[^>]*>", " ").replaceAll("\\s+", " ").trim().substring(0, Math.min(180, htmlContent.length())));
+        log.info("===========================================================");
+    }
+
+    private void sendEmailViaBrevo(String toEmail, String subject, String htmlContent, boolean failOnError) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+
+            Map<String, String> sender = new HashMap<>();
+            sender.put("name", (senderName != null && !senderName.isBlank()) ? senderName.trim() : "Vibe Seekers");
+            sender.put("email", (fromEmail != null && !fromEmail.isBlank()) ? fromEmail.trim() : "vibeseekers09@gmail.com");
+            payload.put("sender", sender);
+
+            List<Map<String, String>> toList = new ArrayList<>();
+            Map<String, String> recipient = new HashMap<>();
+            recipient.put("email", toEmail.trim());
+            toList.add(recipient);
+            payload.put("to", toList);
+
+            payload.put("subject", subject);
+            payload.put("htmlContent", htmlContent);
+
+            String jsonPayload = objectMapper.writeValueAsString(payload);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BREVO_API_URL))
+                    .timeout(Duration.ofSeconds(10))
+                    .header("api-key", brevoApiKey.trim())
+                    .header("accept", "application/json")
+                    .header("content-type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            int statusCode = response.statusCode();
+
+            if (statusCode >= 200 && statusCode < 300) {
+                log.info("Email sent successfully to {} via Brevo REST API (HTTP {})", toEmail, statusCode);
+            } else {
+                String responseBody = response.body();
+                log.error("Brevo API rejected email to {}. HTTP {} - Body: {}", toEmail, statusCode, responseBody);
+                String errorDetails = parseBrevoErrorMessage(responseBody, statusCode);
+                if (failOnError) {
+                    throw new BadRequestException("Failed to send verification email: " + errorDetails);
+                }
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (HttpTimeoutException e) {
+            log.error("Brevo API request timed out after 10s when sending to {}: {}", toEmail, e.getMessage());
+            if (failOnError) {
+                throw new BadRequestException("Email service timed out while sending verification code. Please try again.");
+            }
+        } catch (Exception e) {
+            log.error("Failed to send email to {} via Brevo API: {}", toEmail, e.getMessage());
+            if (failOnError) {
+                throw new BadRequestException("Failed to send verification email: " + e.getMessage());
+            }
+        }
+    }
+
+    private void sendEmailViaSmtp(String toEmail, String subject, String htmlContent, boolean failOnError) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "VIBE SEEKERS");
+            helper.setFrom(fromEmail, (senderName != null && !senderName.isBlank()) ? senderName.trim() : "Vibe Seekers");
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
             mailSender.send(message);
-            log.info("Email sent successfully to {}", toEmail);
+            log.info("Email sent successfully to {} via SMTP", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
+            log.error("Failed to send email to {} via SMTP: {}", toEmail, e.getMessage());
+            if (failOnError) {
+                throw new BadRequestException("Failed to send verification email: " + e.getMessage());
+            }
         }
+    }
+
+    private String parseBrevoErrorMessage(String responseBody, int statusCode) {
+        if (responseBody == null || responseBody.isBlank()) {
+            return "Brevo API returned HTTP " + statusCode;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(responseBody);
+            if (node.has("message") && !node.get("message").asText().isBlank()) {
+                return node.get("message").asText();
+            }
+        } catch (Exception ignored) {
+        }
+        return responseBody.length() > 200 ? responseBody.substring(0, 200) : responseBody;
     }
 
     private String buildOtpEmailHtml(String otpCode, String purpose) {
