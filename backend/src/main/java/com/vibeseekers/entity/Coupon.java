@@ -32,8 +32,8 @@ public class Coupon {
 
     @JsonProperty("active")
     @JsonAlias({"isActive", "active"})
-    @Column(nullable = false)
-    private boolean active = true;
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -46,7 +46,7 @@ public class Coupon {
         this.minOrderAmount = minOrderAmount;
         this.maxDiscountAmount = maxDiscountAmount;
         this.expiryDate = expiryDate;
-        this.active = true;
+        this.isActive = true;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -99,11 +99,11 @@ public class Coupon {
     }
 
     public boolean isActive() {
-        return active;
+        return isActive;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
     }
 
     public LocalDateTime getCreatedAt() {
