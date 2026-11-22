@@ -27,6 +27,10 @@ public class MailService {
         this.mailSender = mailSender;
     }
 
+    public boolean isMailConfigured() {
+        return mailPassword != null && !mailPassword.trim().isEmpty();
+    }
+
     @Async
     public void sendOtpEmail(String toEmail, String otpCode, String purpose) {
         String subject = "VIBE SEEKERS — Verification Code: " + otpCode;

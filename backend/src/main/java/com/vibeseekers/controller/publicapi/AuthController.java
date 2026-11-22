@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -20,9 +21,15 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> register(@Valid @RequestBody RegisterRequest request) {
         String otp = authService.register(request);
-        return ResponseEntity.ok(ApiResponse.ok("Verification OTP code sent! OTP: " + otp, otp));
+        Map<String, Object> data = new HashMap<>();
+        boolean mailConfigured = authService.isMailConfigured();
+        if (!mailConfigured) {
+            data.put("demoOtp", otp);
+            return ResponseEntity.ok(ApiResponse.ok("Verification code generated (demo mode): " + otp, data));
+        }
+        return ResponseEntity.ok(ApiResponse.ok("A 6-digit verification code has been sent to " + request.getEmail().toLowerCase().trim(), data));
     }
 
     @PostMapping("/verify-registration")
@@ -44,9 +51,15 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         String otp = authService.forgotPassword(request);
-        return ResponseEntity.ok(ApiResponse.ok("Password reset OTP sent! OTP: " + otp, otp));
+        Map<String, Object> data = new HashMap<>();
+        boolean mailConfigured = authService.isMailConfigured();
+        if (!mailConfigured) {
+            data.put("demoOtp", otp);
+            return ResponseEntity.ok(ApiResponse.ok("Password reset code generated (demo mode): " + otp, data));
+        }
+        return ResponseEntity.ok(ApiResponse.ok("A 6-digit password reset code has been sent to " + request.getEmail().toLowerCase().trim(), data));
     }
 
     @PostMapping("/reset-password")

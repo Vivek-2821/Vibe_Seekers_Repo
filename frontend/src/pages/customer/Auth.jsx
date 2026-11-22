@@ -37,11 +37,15 @@ export const Auth = () => {
       const msg = err.response?.data?.message || 'Invalid email or password.';
       setErrorMessage(msg);
       if (msg.includes('Account not verified')) {
-        const match = msg.match(/\b\d{6}\b/);
-        if (match) {
-          setReceivedOtp(match[0]);
-          setOtp(match[0]);
+        const demoMatch = msg.match(/Demo verification code:\s*(\d{6})/i);
+        if (demoMatch) {
+          setReceivedOtp(demoMatch[1]);
+          setOtp(demoMatch[1]);
+        } else {
+          setReceivedOtp('');
+          setOtp('');
         }
+        setSuccessMessage('Please enter the 6-digit verification code sent to ' + email);
         setMode('otp');
       }
     } finally {
@@ -55,12 +59,16 @@ export const Auth = () => {
     setErrorMessage('');
     try {
       const res = await signup(fullName, email, phone, password);
-      const code = res?.data || '';
-      if (code) {
-        setReceivedOtp(code);
-        setOtp(code);
+      // Only capture demoOtp if explicitly provided by backend (when MAIL_PASSWORD is not configured)
+      const demoCode = res?.data?.demoOtp || res?.data?.verificationCode || '';
+      if (demoCode) {
+        setReceivedOtp(demoCode);
+        setOtp(demoCode);
+      } else {
+        setReceivedOtp('');
+        setOtp('');
       }
-      setSuccessMessage('Verification code generated for ' + email);
+      setSuccessMessage(res?.message || 'A 6-digit verification code has been sent to ' + email);
       setMode('otp');
     } catch (err) {
       setErrorMessage(err.response?.data?.message || 'Registration failed.');
@@ -93,12 +101,16 @@ export const Auth = () => {
     setErrorMessage('');
     try {
       const res = await forgotPassword(email);
-      const code = res?.data || '';
-      if (code) {
-        setReceivedOtp(code);
-        setOtp(code);
+      // Only capture demoOtp if explicitly provided by backend (when MAIL_PASSWORD is not configured)
+      const demoCode = res?.data?.demoOtp || res?.data?.verificationCode || '';
+      if (demoCode) {
+        setReceivedOtp(demoCode);
+        setOtp(demoCode);
+      } else {
+        setReceivedOtp('');
+        setOtp('');
       }
-      setSuccessMessage('Verification OTP sent to ' + email);
+      setSuccessMessage(res?.message || 'A 6-digit password reset code has been sent to ' + email);
       setMode('reset');
     } catch (err) {
       setErrorMessage(err.response?.data?.message || 'Failed to process request.');
@@ -145,7 +157,7 @@ export const Auth = () => {
           </h2>
           <p className="text-xs text-zinc-400 uppercase tracking-wider">
             {mode === 'login' && 'Unlock saved addresses & track your drops'}
-            {mode === 'signup' && 'Join the Indian streetwear revolution'}
+            {mode === 'signup' && 'Join the Indian streetwear movement'}
             {mode === 'otp' && `Enter the 6-digit code sent to ${email}`}
             {mode === 'forgot' && 'We will send a 6-digit recovery OTP to your email'}
             {mode === 'reset' && 'Enter your OTP and choose a new password'}
@@ -166,10 +178,11 @@ export const Auth = () => {
           </div>
         )}
 
-        {/* Development Helper Pill if OTP is returned */}
+        {/* Development Helper Pill - ONLY displayed if backend explicitly returns a demoOtp */}
         {receivedOtp && (
-          <div className="p-2.5 bg-black border border-zinc-700 text-center text-xs">
-            <span className="text-zinc-400">DEMO VERIFICATION CODE: </span>
+          <div className="p-3 bg-zinc-950 border border-zinc-700 text-center text-xs space-y-1">
+            <span className="text-zinc-500 uppercase text-[10px] tracking-wider block">Dev Demo Code (No SMTP Configured)</span>
+            <span className="text-zinc-300 font-semibold">VERIFICATION CODE: </span>
             <strong className="text-white font-mono tracking-widest text-sm">{receivedOtp}</strong>
           </div>
         )}
@@ -238,7 +251,7 @@ export const Auth = () => {
           <form onSubmit={handleSignupSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                Full Name
+                Full Name *
               </label>
               <div className="relative">
                 <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -255,7 +268,7 @@ export const Auth = () => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                Email Address
+                Email Address (6-Digit OTP Will Be Sent Here) *
               </label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -268,11 +281,14 @@ export const Auth = () => {
                   className="w-full bg-black border border-zinc-800 pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-white"
                 />
               </div>
+              <span className="text-[10px] text-zinc-500 mt-1 block">
+                We will send your 6-digit account verification code to this inbox.
+              </span>
             </div>
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                Phone Number (10 Digits)
+                Mobile Number (For Courier Order Delivery Updates) *
               </label>
               <div className="relative">
                 <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -282,15 +298,18 @@ export const Auth = () => {
                   maxLength={10}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="9860498749"
+                  placeholder="10-digit mobile number, e.g. 9860498749"
                   className="w-full bg-black border border-zinc-800 pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-white"
                 />
               </div>
+              <span className="text-[10px] text-zinc-500 mt-1 block">
+                Used for express doorstep delivery tracking and courier SMS updates across India.
+              </span>
             </div>
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                Password
+                Create Password *
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -311,7 +330,7 @@ export const Auth = () => {
               disabled={loading}
               className="w-full py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors shadow-xl disabled:opacity-50"
             >
-              {loading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
+              {loading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT & SEND OTP'}
             </button>
           </form>
         )}
@@ -319,9 +338,17 @@ export const Auth = () => {
         {/* OTP VERIFICATION FORM */}
         {mode === 'otp' && (
           <form onSubmit={handleOtpSubmit} className="space-y-4">
+            <div className="p-3 bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 space-y-1">
+              <p className="font-semibold text-white">We've sent a 6-digit verification code to:</p>
+              <p className="font-mono text-zinc-200">{email}</p>
+              <p className="text-zinc-400 text-[11px] pt-1">
+                Please check your inbox (and spam/junk folder) and enter your code below.
+              </p>
+            </div>
+
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                6-Digit Verification Code
+                Enter 6-Digit Verification Code *
               </label>
               <div className="relative">
                 <KeyRound size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -342,8 +369,19 @@ export const Auth = () => {
               disabled={loading}
               className="w-full py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors disabled:opacity-50"
             >
-              {loading ? 'VERIFYING...' : 'CONFIRM & ACTIVATE'}
+              {loading ? 'VERIFYING...' : 'CONFIRM & ACTIVATE ACCOUNT'}
             </button>
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={handleSignupSubmit}
+                disabled={loading}
+                className="text-xs text-zinc-400 hover:text-white underline"
+              >
+                Didn't receive code? Resend Email OTP
+              </button>
+            </div>
           </form>
         )}
 
@@ -352,7 +390,7 @@ export const Auth = () => {
           <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                Registered Email
+                Registered Email Address *
               </label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -365,6 +403,9 @@ export const Auth = () => {
                   className="w-full bg-black border border-zinc-800 pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-white"
                 />
               </div>
+              <span className="text-[10px] text-zinc-500 mt-1 block">
+                We will email your 6-digit password recovery code to this inbox.
+              </span>
             </div>
 
             <button
@@ -372,7 +413,7 @@ export const Auth = () => {
               disabled={loading}
               className="w-full py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors disabled:opacity-50"
             >
-              {loading ? 'SENDING CODE...' : 'SEND RECOVERY OTP'}
+              {loading ? 'SENDING CODE...' : 'SEND RECOVERY CODE'}
             </button>
           </form>
         )}
@@ -380,9 +421,17 @@ export const Auth = () => {
         {/* RESET PASSWORD FORM */}
         {mode === 'reset' && (
           <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+            <div className="p-3 bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 space-y-1">
+              <p className="font-semibold text-white">We've sent a 6-digit password reset code to:</p>
+              <p className="font-mono text-zinc-200">{email}</p>
+              <p className="text-zinc-400 text-[11px] pt-1">
+                Please check your inbox (and spam/junk folder) and enter your code below.
+              </p>
+            </div>
+
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                6-Digit Recovery OTP
+                6-Digit Recovery OTP *
               </label>
               <input
                 type="text"
@@ -397,7 +446,7 @@ export const Auth = () => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                New Password
+                New Password *
               </label>
               <input
                 type="password"
@@ -429,6 +478,7 @@ export const Auth = () => {
                 type="button"
                 onClick={() => {
                   setErrorMessage('');
+                  setSuccessMessage('');
                   setMode('signup');
                 }}
                 className="text-white font-bold hover:underline ml-1 uppercase tracking-wider"
@@ -443,6 +493,7 @@ export const Auth = () => {
                 type="button"
                 onClick={() => {
                   setErrorMessage('');
+                  setSuccessMessage('');
                   setMode('login');
                 }}
                 className="text-white font-bold hover:underline ml-1 uppercase tracking-wider"

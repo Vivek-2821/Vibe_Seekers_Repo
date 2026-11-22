@@ -39,6 +39,10 @@ public class AuthService {
         this.mailService = mailService;
     }
 
+    public boolean isMailConfigured() {
+        return mailService.isMailConfigured();
+    }
+
     @Transactional
     public String register(RegisterRequest request) {
         String email = request.getEmail().toLowerCase().trim();
@@ -112,7 +116,11 @@ public class AuthService {
             // Trigger an OTP to allow customer to finish verification
             String otp = otpService.generateOtp(email, "REGISTRATION");
             mailService.sendOtpEmail(email, otp, "Account Verification");
-            throw new BadRequestException("Account not verified. Your verification code is: " + otp);
+            if (mailService.isMailConfigured()) {
+                throw new BadRequestException("Account not verified. A 6-digit verification code has been sent to your email.");
+            } else {
+                throw new BadRequestException("Account not verified. Demo verification code: " + otp);
+            }
         }
 
         if (adminOnly && user.getRole() != Role.ROLE_ADMIN) {

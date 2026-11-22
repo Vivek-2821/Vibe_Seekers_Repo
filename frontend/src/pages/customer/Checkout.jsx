@@ -224,7 +224,7 @@ export const Checkout = () => {
   return (
     <div className="bg-[#080808] min-h-screen text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        
+
         {/* Header */}
         <div className="border-b border-zinc-800 pb-6 mb-8">
           <span className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
@@ -246,10 +246,10 @@ export const Checkout = () => {
         )}
 
         <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+
           {/* Left: Delivery Details (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
-            
+
             <div className="bg-[#121212] border border-zinc-800 p-6 space-y-5">
               <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-white border-b border-zinc-800 pb-3 flex items-center justify-between">
                 <span>1. Pan-India Delivery Address</span>
@@ -425,9 +425,9 @@ export const Checkout = () => {
 
           {/* Right: Payment Suite & UPI QR (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
-            
+
             <div className="bg-[#121212] border border-zinc-800 p-6 space-y-6">
-              
+
               <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
                 <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-white">
                   2. UPI PREPAID PAYMENT
@@ -442,7 +442,7 @@ export const Checkout = () => {
                 <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
                   Scan via PhonePe / Google Pay / Paytm / Any UPI App
                 </p>
-                
+
                 <div className="flex justify-center py-2">
                   <img
                     src="/assets/phonepe-qr.jpg"
@@ -512,7 +512,7 @@ export const Checkout = () => {
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400">
                   Payment Screenshot (Optional for Instant Verification)
                 </label>
-                
+
                 <div className="border border-dashed border-zinc-800 p-3 text-center bg-black hover:border-zinc-700 transition-colors">
                   <input
                     type="file"
