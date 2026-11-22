@@ -39,7 +39,12 @@ export const Products = () => {
     discountPercent: '',
     description: '',
     fabricDetails: '',
+    colors: '',
+    gsm: '',
+    washingInstructions: '',
+    collectionName: '',
     newArrival: false,
+    isBestSeller: false,
     active: true,
   });
 
@@ -83,7 +88,12 @@ export const Products = () => {
       discountPercent: '',
       description: '',
       fabricDetails: '',
+      colors: 'Acid Black, Vintage White',
+      gsm: '240 GSM',
+      washingInstructions: 'Machine wash cold inside-out with like colors. Do not iron directly on print.',
+      collectionName: '',
       newArrival: true,
+      isBestSeller: false,
       active: true,
     });
     setSizeStocks({ S: 10, M: 20, L: 25, XL: 15, XXL: 8 });
@@ -108,7 +118,12 @@ export const Products = () => {
       discountPercent: calculatedDiscount,
       description: product.description,
       fabricDetails: product.fabricDetails || '',
+      colors: product.colors || '',
+      gsm: product.gsm || '',
+      washingInstructions: product.washingInstructions || '',
+      collectionName: product.collectionName || '',
       newArrival: product.newArrival,
+      isBestSeller: !!product.isBestSeller,
       active: product.active,
     });
 
@@ -264,7 +279,12 @@ export const Products = () => {
         discountPercent: formData.discountPercent !== '' ? Number(formData.discountPercent) : null,
         description: formData.description,
         fabricDetails: formData.fabricDetails,
+        colors: formData.colors,
+        gsm: formData.gsm,
+        washingInstructions: formData.washingInstructions,
+        collectionName: formData.collectionName,
         newArrival: formData.newArrival,
+        isBestSeller: formData.isBestSeller,
         active: formData.active,
         sizeStocks: sizeStockArray,
         existingImages: existingImages.map((img, idx) => ({
@@ -575,6 +595,58 @@ export const Products = () => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Available Colors (Comma Separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.colors}
+                    onChange={(e) => setFormData({ ...formData, colors: e.target.value })}
+                    placeholder="Acid Black, Vintage White, Olive"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    GSM (Weight Specification)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gsm}
+                    onChange={(e) => setFormData({ ...formData, gsm: e.target.value })}
+                    placeholder="e.g. 240 GSM or 400 GSM Fleece"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Collection Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.collectionName}
+                    onChange={(e) => setFormData({ ...formData, collectionName: e.target.value })}
+                    placeholder="e.g. Acid Wash Drop 01"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Washing & Care Instructions
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.washingInstructions}
+                    onChange={(e) => setFormData({ ...formData, washingInstructions: e.target.value })}
+                    placeholder="Machine wash cold inside-out. Flat dry in shade."
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
+                  />
+                </div>
+
                 {/* PRICING & DISCOUNT SUITE */}
                 <div className="col-span-1 sm:col-span-2 bg-zinc-950/80 border border-zinc-800 rounded-xl p-4 space-y-3.5">
                   <div className="flex items-center justify-between">
@@ -827,6 +899,16 @@ export const Products = () => {
                     className="h-4 w-4 rounded border-zinc-700 text-vibe-accent focus:ring-vibe-accent"
                   />
                   <span>Mark as Fresh Drop (New Arrival)</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">
+                  <input
+                    type="checkbox"
+                    checked={formData.isBestSeller}
+                    onChange={(e) => setFormData({ ...formData, isBestSeller: e.target.checked })}
+                    className="h-4 w-4 rounded border-zinc-700 text-vibe-accent focus:ring-vibe-accent"
+                  />
+                  <span>Mark as Best Seller</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">

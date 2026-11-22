@@ -40,6 +40,7 @@ public class AdminController {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ContactMessageRepository contactMessageRepository;
+    private final com.vibeseekers.service.CouponService couponService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public AdminController(ProductService productService,
@@ -49,7 +50,8 @@ public class AdminController {
                            PaymentRepository paymentRepository,
                            UserRepository userRepository,
                            ProductRepository productRepository,
-                           ContactMessageRepository contactMessageRepository) {
+                           ContactMessageRepository contactMessageRepository,
+                           com.vibeseekers.service.CouponService couponService) {
         this.productService = productService;
         this.orderService = orderService;
         this.storeSettingService = storeSettingService;
@@ -58,6 +60,7 @@ public class AdminController {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.contactMessageRepository = contactMessageRepository;
+        this.couponService = couponService;
     }
 
     // ==================== DASHBOARD OVERVIEW ====================
@@ -217,5 +220,23 @@ public class AdminController {
             contactMessageRepository.save(msg);
         });
         return ResponseEntity.ok(ApiResponse.ok("Message marked as read", null));
+    }
+
+    // ==================== COUPONS MANAGEMENT ====================
+
+    @GetMapping("/coupons")
+    public ResponseEntity<ApiResponse<List<com.vibeseekers.entity.Coupon>>> getAllCoupons() {
+        return ResponseEntity.ok(ApiResponse.ok(couponService.getAllCoupons()));
+    }
+
+    @PostMapping("/coupons")
+    public ResponseEntity<ApiResponse<com.vibeseekers.entity.Coupon>> createCoupon(@RequestBody com.vibeseekers.entity.Coupon coupon) {
+        return ResponseEntity.ok(ApiResponse.ok("Coupon created successfully", couponService.createCoupon(coupon)));
+    }
+
+    @DeleteMapping("/coupons/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteCoupon(@PathVariable Long id) {
+        couponService.deleteCoupon(id);
+        return ResponseEntity.ok(ApiResponse.ok("Coupon deleted successfully", null));
     }
 }

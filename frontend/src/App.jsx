@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { AdminRoute } from './routes/AdminRoute';
 
@@ -32,6 +33,7 @@ import { Orders } from './pages/admin/Orders';
 import { Shiprocket } from './pages/admin/Shiprocket';
 import { Customers } from './pages/admin/Customers';
 import { StoreSettings } from './pages/admin/Settings';
+import { Coupons } from './pages/admin/Coupons';
 
 // Customer Storefront Layout with Global Navbar & Footer
 const CustomerLayout = () => {
@@ -50,58 +52,61 @@ const CustomerLayout = () => {
 export const App = () => {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Router>
-          <Routes>
-            {/* Customer Storefront Routes */}
-            <Route element={<CustomerLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/product/:slug" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
+      <WishlistProvider>
+        <CartProvider>
+          <Router>
+            <Routes>
+              {/* Customer Storefront Routes */}
+              <Route element={<CustomerLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/shop" element={<Shop />} />
+                <Route path="/product/:slug" element={<ProductDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route
+                  path="/checkout"
+                  element={
+                    <ProtectedRoute>
+                      <Checkout />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/track-order" element={<TrackOrder />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/order-policy" element={<OrderPolicy />} />
+                <Route path="/login" element={<Auth />} />
+                <Route path="/signup" element={<Auth />} />
+                <Route path="/forgot-password" element={<Auth />} />
+              </Route>
+
+              {/* Admin Dedicated Authentication Route */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+
+              {/* Admin Dashboard Protected Routes */}
               <Route
-                path="/checkout"
+                path="/admin"
                 element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
                 }
-              />
-              <Route path="/track-order" element={<TrackOrder />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/order-policy" element={<OrderPolicy />} />
-              <Route path="/login" element={<Auth />} />
-              <Route path="/signup" element={<Auth />} />
-              <Route path="/forgot-password" element={<Auth />} />
-            </Route>
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<Products />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="coupons" element={<Coupons />} />
+                <Route path="shiprocket" element={<Shiprocket />} />
+                <Route path="customers" element={<Customers />} />
+                <Route path="settings" element={<StoreSettings />} />
+              </Route>
 
-            {/* Admin Dedicated Authentication Route */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-
-            {/* Admin Dashboard Protected Routes */}
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminLayout />
-                </AdminRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="products" element={<Products />} />
-              <Route path="orders" element={<Orders />} />
-              <Route path="shiprocket" element={<Shiprocket />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="settings" element={<StoreSettings />} />
-            </Route>
-
-            {/* Catch-all redirect to Home */}
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </Router>
-      </CartProvider>
+              {/* Catch-all redirect to Home */}
+              <Route path="*" element={<Home />} />
+            </Routes>
+          </Router>
+        </CartProvider>
+      </WishlistProvider>
     </AuthProvider>
   );
 };

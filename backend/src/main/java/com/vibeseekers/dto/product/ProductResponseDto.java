@@ -18,6 +18,11 @@ public class ProductResponseDto {
     private String description;
     private String fabricDetails;
     private boolean isNewArrival;
+    private boolean isBestSeller;
+    private String colors;
+    private String gsm;
+    private String washingInstructions;
+    private String collectionName;
     private boolean isActive;
     private String primaryImageUrl;
     private int totalStock;
@@ -106,6 +111,46 @@ public class ProductResponseDto {
 
     public void setNewArrival(boolean newArrival) {
         isNewArrival = newArrival;
+    }
+
+    public boolean isBestSeller() {
+        return isBestSeller;
+    }
+
+    public void setBestSeller(boolean bestSeller) {
+        isBestSeller = bestSeller;
+    }
+
+    public String getColors() {
+        return colors;
+    }
+
+    public void setColors(String colors) {
+        this.colors = colors;
+    }
+
+    public String getGsm() {
+        return gsm;
+    }
+
+    public void setGsm(String gsm) {
+        this.gsm = gsm;
+    }
+
+    public String getWashingInstructions() {
+        return washingInstructions;
+    }
+
+    public void setWashingInstructions(String washingInstructions) {
+        this.washingInstructions = washingInstructions;
+    }
+
+    public String getCollectionName() {
+        return collectionName;
+    }
+
+    public void setCollectionName(String collectionName) {
+        this.collectionName = collectionName;
     }
 
     public boolean isActive() {

@@ -33,19 +33,22 @@ public class DataInitializer implements CommandLineRunner {
 
     @Value("${app.admin.name:Vivek Ashok Matne}")
     private String adminName;
+    private final com.vibeseekers.repository.CouponRepository couponRepository;
 
     public DataInitializer(UserRepository userRepository,
                            ProductRepository productRepository,
                            ProductImageRepository productImageRepository,
                            ProductSizeStockRepository sizeStockRepository,
                            StoreSettingService storeSettingService,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           com.vibeseekers.repository.CouponRepository couponRepository) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.productImageRepository = productImageRepository;
         this.sizeStockRepository = sizeStockRepository;
         this.storeSettingService = storeSettingService;
         this.passwordEncoder = passwordEncoder;
+        this.couponRepository = couponRepository;
     }
 
     @Override
@@ -53,6 +56,20 @@ public class DataInitializer implements CommandLineRunner {
         seedAdminUser();
         seedStoreSettings();
         seedSampleProducts();
+        seedCoupons();
+    }
+
+    private void seedCoupons() {
+        if (!couponRepository.existsByCodeIgnoreCase("VIBE10")) {
+            couponRepository.save(new com.vibeseekers.entity.Coupon("VIBE10", 10, new BigDecimal("999.00"), new BigDecimal("300.00"), java.time.LocalDateTime.now().plusMonths(6)));
+        }
+        if (!couponRepository.existsByCodeIgnoreCase("STREET20")) {
+            couponRepository.save(new com.vibeseekers.entity.Coupon("STREET20", 20, new BigDecimal("2499.00"), new BigDecimal("600.00"), java.time.LocalDateTime.now().plusMonths(6)));
+        }
+        if (!couponRepository.existsByCodeIgnoreCase("FIRSTVIBE")) {
+            couponRepository.save(new com.vibeseekers.entity.Coupon("FIRSTVIBE", 15, new BigDecimal("1499.00"), new BigDecimal("400.00"), java.time.LocalDateTime.now().plusMonths(6)));
+        }
+        log.info("Initialized default streetwear promo coupons.");
     }
 
     private void seedAdminUser() {
@@ -84,6 +101,37 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedSampleProducts() {
         if (productRepository.count() > 0) {
+            // Enrich existing products with best-seller flags and luxury attributes
+            List<Product> existing = productRepository.findAll();
+            for (Product p : existing) {
+                boolean changed = false;
+                if (p.getColors() == null || p.getColors().isEmpty()) {
+                    p.setColors("Acid Black, Vintage White, Washed Charcoal");
+                    changed = true;
+                }
+                if (p.getGsm() == null || p.getGsm().isEmpty()) {
+                    p.setGsm(p.getCategory() == ProductCategory.HOODIES ? "420 GSM Luxury Heavyweight Fleece" :
+                             (p.getCategory() == ProductCategory.JACKETS ? "380 GSM Japanese Twill" : "240 GSM Combed Luxury Cotton"));
+                    changed = true;
+                }
+                if (p.getWashingInstructions() == null || p.getWashingInstructions().isEmpty()) {
+                    p.setWashingInstructions("Cold gentle machine wash inside out with dark colors. Do not bleach. Hang dry in shade. Do not iron directly on graphics.");
+                    changed = true;
+                }
+                if (p.getCollectionName() == null || p.getCollectionName().isEmpty()) {
+                    p.setCollectionName("Underground Genesis Drop 01");
+                    changed = true;
+                }
+                if (p.isBestSeller() == null || !p.isBestSeller()) {
+                    if (p.getSlug() != null && (p.getSlug().contains("glyph") || p.getSlug().contains("tokyo") || p.getSlug().contains("hoodie") || p.getSlug().contains("fleece"))) {
+                        p.setBestSeller(true);
+                        changed = true;
+                    }
+                }
+                if (changed) {
+                    productRepository.save(p);
+                }
+            }
             return;
         }
 
@@ -240,6 +288,11 @@ public class DataInitializer implements CommandLineRunner {
         product.setDescription(description);
         product.setFabricDetails(fabric);
         product.setNewArrival(isNewArrival);
+        product.setBestSeller(slug.contains("glyph") || slug.contains("tokyo") || slug.contains("cyber") || slug.contains("fleece"));
+        product.setColors("Acid Black, Vintage White, Olive, Charcoal");
+        product.setGsm(fabric != null && fabric.contains("GSM") ? fabric.split("\\|")[0].trim() : (category == ProductCategory.HOODIES ? "400 GSM" : "240 GSM"));
+        product.setWashingInstructions("Machine wash cold inside-out with like colors. Do not iron directly on print. Flat dry in shade.");
+        product.setCollectionName("Monochrome Drop 01");
         product.setActive(true);
 
         Product savedProduct = productRepository.save(product);

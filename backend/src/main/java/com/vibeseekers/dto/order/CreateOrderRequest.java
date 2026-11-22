@@ -22,6 +22,8 @@ public class CreateOrderRequest {
 
     private String upiTransactionId; // Optional at initial order creation if uploading screenshot or providing in next step
 
+    private String couponCode;
+
     private String customerNotes;
 
     public CreateOrderRequest() {
@@ -57,6 +59,14 @@ public class CreateOrderRequest {
 
     public void setUpiTransactionId(String upiTransactionId) {
         this.upiTransactionId = upiTransactionId;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
     }
 
     public String getCustomerNotes() {

@@ -1,64 +1,95 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MessageCircle, Mail, Phone, ShieldAlert, Truck, CreditCard, Sparkles } from 'lucide-react';
+import {
+  Instagram,
+  MessageCircle,
+  Mail,
+  Phone,
+  ShieldCheck,
+  Truck,
+  CreditCard,
+  Sparkles,
+  ArrowRight,
+  Check,
+} from 'lucide-react';
 
 export const Footer = () => {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    if (newsletterEmail.trim()) {
+      setSubscribed(true);
+      setNewsletterEmail('');
+      setTimeout(() => setSubscribed(false), 4000);
+    }
+  };
+
   return (
-    <footer className="bg-zinc-950 border-t border-zinc-900 text-zinc-400 text-sm">
+    <footer className="bg-[#080808] border-t border-zinc-800 text-zinc-400 text-xs">
       
-      {/* Trust Highlights Section */}
-      <div className="border-b border-zinc-900 py-10 bg-black/60">
+      {/* 1. Value Props Bar */}
+      <div className="border-b border-zinc-800/80 py-10 bg-[#0c0c0c]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-zinc-900 border border-zinc-800 text-vibe-accent rounded-lg">
-              <Truck size={24} />
+            <div className="p-3 bg-zinc-900 border border-zinc-800 text-white flex-shrink-0">
+              <Truck size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-white uppercase tracking-wider text-xs">Pan-India Delivery</h4>
-              <p className="text-xs text-zinc-500 mt-1">Reliable, express door-to-door courier logistics to every Indian pincode.</p>
+              <h4 className="font-bold text-white uppercase tracking-widest text-xs">PAN-INDIA EXPRESS</h4>
+              <p className="text-zinc-500 mt-1 text-[11px] leading-relaxed">
+                Fast, insured door-to-door courier delivery to all Indian pin codes at zero shipping charges.
+              </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-zinc-900 border border-zinc-800 text-vibe-accent rounded-lg">
-              <CreditCard size={24} />
+            <div className="p-3 bg-zinc-900 border border-zinc-800 text-white flex-shrink-0">
+              <CreditCard size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-white uppercase tracking-wider text-xs">Prepaid UPI Checkout</h4>
-              <p className="text-xs text-zinc-500 mt-1">Instant QR scan & UPI payments with 12-digit UTR verification.</p>
+              <h4 className="font-bold text-white uppercase tracking-widest text-xs">100% PREPAID UPI</h4>
+              <p className="text-zinc-500 mt-1 text-[11px] leading-relaxed">
+                Direct PhonePe / GPay QR scan & UTR confirmation. No fraudulent COD cancellations.
+              </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-zinc-900 border border-zinc-800 text-vibe-accent rounded-lg">
-              <Sparkles size={24} />
+            <div className="p-3 bg-zinc-900 border border-zinc-800 text-white flex-shrink-0">
+              <Sparkles size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-white uppercase tracking-wider text-xs">Heavyweight Drip</h4>
-              <p className="text-xs text-zinc-500 mt-1">240+ GSM terry cotton, acid washes, and bold statement silhouettes.</p>
+              <h4 className="font-bold text-white uppercase tracking-widest text-xs">HEAVYWEIGHT DRIP</h4>
+              <p className="text-zinc-500 mt-1 text-[11px] leading-relaxed">
+                240+ GSM combed terry cotton, acid-wash patinas, and signature drop-shoulder silhouettes.
+              </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-zinc-900 border border-zinc-800 text-amber-500 rounded-lg">
-              <ShieldAlert size={24} />
+            <div className="p-3 bg-zinc-900 border border-zinc-800 text-zinc-300 flex-shrink-0">
+              <ShieldCheck size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-white uppercase tracking-wider text-xs">Clear Sizing & Policy</h4>
-              <p className="text-xs text-zinc-500 mt-1">Return options are currently unavailable. Check size charts before checkout.</p>
+              <h4 className="font-bold text-white uppercase tracking-widest text-xs">STRICT NO-RETURN</h4>
+              <p className="text-zinc-500 mt-1 text-[11px] leading-relaxed">
+                To maintain hygiene & limited batch exclusivity, returns are not applicable. Check size guide.
+              </p>
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+      {/* 2. Main Editorial Footer & Newsletter */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10">
           
-          {/* Brand Bio */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Brand Bio & Socials (4 cols) */}
+          <div className="lg:col-span-4 space-y-5">
             <Link to="/" className="inline-block">
               <img
                 src="/assets/logo.png"
@@ -66,143 +97,113 @@ export const Footer = () => {
                 className="h-16 w-auto object-contain brightness-110"
               />
             </Link>
-            <p className="text-xs leading-relaxed text-zinc-400 max-w-sm">
-              VIBE SEEKERS is an authentic Indian streetwear clothing label founded to redefine oversized fashion, heavyweight fabrics, and bold underground silhouettes.
+            <p className="text-zinc-400 text-xs leading-relaxed max-w-sm">
+              VIBE SEEKERS is an authentic Indian streetwear clothing label founded to redefine oversized fashion, heavyweight fabrics, and bold underground silhouettes for boys and girls.
             </p>
-            <div className="pt-2">
-              <p className="text-xs text-zinc-300 font-semibold">Payee & Brand Owner:</p>
-              <p className="text-xs text-zinc-500">Vivek Ashok Matne</p>
+            <div className="text-[11px] text-zinc-500 space-y-0.5">
+              <p><strong className="text-zinc-300">Brand Owner & Payee:</strong> Vivek Ashok Matne</p>
+              <p><strong className="text-zinc-300">Registered UPI:</strong> 9860498749-2@ybl</p>
             </div>
             <div className="flex items-center gap-3 pt-2">
               <a
                 href="https://www.instagram.com/vibe_seekers_09?cnvx=enZ5NDYwM2doN2ll&utm_source=qr"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-vibe-accent rounded-lg transition-colors"
+                className="p-2.5 bg-zinc-900 hover:bg-white hover:text-black border border-zinc-800 text-zinc-300 transition-colors"
                 aria-label="Instagram"
               >
-                <Instagram size={18} />
+                <Instagram size={16} />
               </a>
               <a
                 href="https://wa.me/919860498749"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-emerald-400 rounded-lg transition-colors"
+                className="p-2.5 bg-zinc-900 hover:bg-emerald-500 hover:text-black border border-zinc-800 text-zinc-300 transition-colors"
                 aria-label="WhatsApp Support"
               >
-                <MessageCircle size={18} />
+                <MessageCircle size={16} />
               </a>
               <a
                 href="mailto:vibeseekers09@gmail.com"
-                className="p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-vibe-accent rounded-lg transition-colors"
+                className="p-2.5 bg-zinc-900 hover:bg-white hover:text-black border border-zinc-800 text-zinc-300 transition-colors"
                 aria-label="Email Support"
               >
-                <Mail size={18} />
+                <Mail size={16} />
               </a>
             </div>
           </div>
 
-          {/* Streetwear Categories */}
-          <div>
-            <h3 className="text-xs font-black tracking-widest uppercase text-white mb-4">Streetwear</h3>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <Link to="/shop?category=TSHIRTS" className="hover:text-vibe-accent transition-colors">
-                  Oversized T-Shirts
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=HOODIES" className="hover:text-vibe-accent transition-colors">
-                  Heavy Fleece Hoodies
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=JACKETS" className="hover:text-vibe-accent transition-colors">
-                  Cargo & Coach Jackets
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop" className="hover:text-vibe-accent transition-colors">
-                  New Drops & Archives
-                </Link>
-              </li>
+          {/* Quick Links: Shop (2 cols) */}
+          <div className="lg:col-span-2 space-y-3">
+            <h5 className="font-bold text-white uppercase tracking-[0.2em] text-xs">COLLECTIONS</h5>
+            <ul className="space-y-2 text-zinc-400 text-xs">
+              <li><Link to="/shop" className="hover:text-white transition-colors">Shop All Drops</Link></li>
+              <li><Link to="/shop?category=TSHIRTS" className="hover:text-white transition-colors">Oversized Tees</Link></li>
+              <li><Link to="/shop?category=HOODIES" className="hover:text-white transition-colors">Heavyweight Hoodies</Link></li>
+              <li><Link to="/shop?category=JACKETS" className="hover:text-white transition-colors">Statement Jackets</Link></li>
+              <li><Link to="/shop?filter=new" className="hover:text-white transition-colors">New Drops</Link></li>
+              <li><Link to="/shop?filter=bestseller" className="hover:text-white transition-colors">Best Sellers</Link></li>
             </ul>
           </div>
 
-          {/* Quick Help & Orders */}
-          <div>
-            <h3 className="text-xs font-black tracking-widest uppercase text-white mb-4">Customer Care</h3>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <Link to="/track-order" className="hover:text-vibe-accent transition-colors">
-                  Track Your Shipment
-                </Link>
-              </li>
-              <li>
-                <Link to="/faq" className="hover:text-vibe-accent transition-colors">
-                  Frequently Asked Questions
-                </Link>
-              </li>
-              <li>
-                <Link to="/order-policy" className="hover:text-vibe-accent transition-colors">
-                  Return & Shipping Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-vibe-accent transition-colors">
-                  Contact Support
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-vibe-accent transition-colors">
-                  About Vibe Seekers
-                </Link>
-              </li>
+          {/* Customer Support & Policies (2 cols) */}
+          <div className="lg:col-span-2 space-y-3">
+            <h5 className="font-bold text-white uppercase tracking-[0.2em] text-xs">CLIENT CARE</h5>
+            <ul className="space-y-2 text-zinc-400 text-xs">
+              <li><Link to="/track-order" className="hover:text-white transition-colors">Track Your Order</Link></li>
+              <li><Link to="/order-policy" className="hover:text-white transition-colors">Prepaid & Return Policy</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">Frequently Asked</Link></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">Our Brand Story</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Vivek</Link></li>
             </ul>
           </div>
 
-          {/* Direct Support Details */}
-          <div>
-            <h3 className="text-xs font-black tracking-widest uppercase text-white mb-4">Direct Contact</h3>
-            <div className="space-y-3 text-xs">
-              <a
-                href="https://wa.me/919860498749"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
-              >
-                <Phone size={14} className="text-emerald-500" />
-                <span>+91 9860498749 (WhatsApp)</span>
-              </a>
-              <a
-                href="mailto:vibeseekers09@gmail.com"
-                className="flex items-center gap-2 hover:text-vibe-accent transition-colors truncate"
-              >
-                <Mail size={14} className="text-vibe-accent" />
-                <span className="truncate">vibeseekers09@gmail.com</span>
-              </a>
-              <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 text-[11px] leading-relaxed">
-                <span className="text-vibe-accent font-bold block mb-1">Prepaid Store Notice</span>
-                All orders are processed through prepaid UPI verification. Cash on Delivery is disabled.
+          {/* Newsletter Subscription (4 cols) */}
+          <div className="lg:col-span-4 space-y-3">
+            <h5 className="font-bold text-white uppercase tracking-[0.2em] text-xs">VIBE CLUB NEWSLETTER</h5>
+            <p className="text-zinc-400 text-xs leading-relaxed">
+              Subscribe to unlock secret drops, early archive access, and 10% off your first streetwear purchase.
+            </p>
+            {subscribed ? (
+              <div className="p-3 bg-zinc-900 border border-zinc-700 text-white flex items-center gap-2 text-xs">
+                <Check size={16} className="text-emerald-400" />
+                <span>You're in the Vibe Club. Use code <strong>VIBE10</strong>!</span>
               </div>
-            </div>
+            ) : (
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                <input
+                  type="email"
+                  required
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full bg-[#141414] border border-zinc-800 text-white px-3 py-2.5 text-xs outline-none focus:border-white transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 bg-white text-black font-bold uppercase tracking-wider text-xs hover:bg-zinc-200 transition-colors flex-shrink-0 flex items-center gap-1"
+                >
+                  <span>JOIN</span>
+                  <ArrowRight size={14} />
+                </button>
+              </form>
+            )}
+            <p className="text-[10px] text-zinc-500">
+              By subscribing, you agree to receive VIBE SEEKERS drop alerts. Unsubscribe at any time.
+            </p>
           </div>
 
         </div>
+      </div>
 
-        {/* Bottom Policy & Copyright */}
-        <div className="mt-12 pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-          <p>© {new Date().getFullYear()} VIBE SEEKERS. All Rights Reserved. Crafted for Indian Streetwear Culture.</p>
-          <div className="flex items-center gap-6">
-            <Link to="/order-policy" className="hover:text-zinc-300 transition-colors">
-              No Returns Policy
-            </Link>
-            <Link to="/faq" className="hover:text-zinc-300 transition-colors">
-              Size & Care Guide
-            </Link>
-            <Link to="/admin/login" className="text-zinc-600 hover:text-zinc-400 transition-colors">
-              Admin Access
-            </Link>
+      {/* 3. Bottom Bar */}
+      <div className="border-t border-zinc-900 bg-[#050505] py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-[11px] text-zinc-500">
+          <div>
+            © {new Date().getFullYear()} VIBE SEEKERS. All rights reserved. Designed for the culture.
+          </div>
+          <div className="flex items-center gap-4 text-zinc-400">
+            <span>UPI • PhonePe • Google Pay • Paytm • Cards</span>
           </div>
         </div>
       </div>

@@ -27,11 +27,15 @@ public class CustomerController {
 
     private final OrderService orderService;
     private final UserRepository userRepository;
+    private final com.vibeseekers.service.WishlistService wishlistService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public CustomerController(OrderService orderService, UserRepository userRepository) {
+    public CustomerController(OrderService orderService,
+                              UserRepository userRepository,
+                              com.vibeseekers.service.WishlistService wishlistService) {
         this.orderService = orderService;
         this.userRepository = userRepository;
+        this.wishlistService = wishlistService;
     }
 
     @GetMapping("/profile")
@@ -118,5 +122,36 @@ public class CustomerController {
     ) {
         OrderResponseDto order = orderService.submitPaymentProof(orderNumber, proof, null);
         return ResponseEntity.ok(ApiResponse.ok("Payment proof submitted for verification", order));
+    }
+
+    // ==================== WISHLIST ====================
+
+    @GetMapping("/wishlist")
+    public ResponseEntity<ApiResponse<List<com.vibeseekers.dto.product.ProductResponseDto>>> getMyWishlist(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(wishlistService.getWishlist(principal.getId())));
+    }
+
+    @PostMapping("/wishlist/{productId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> toggleWishlist(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long productId
+    ) {
+        boolean added = wishlistService.toggleWishlist(principal.getId(), productId);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("productId", productId);
+        resp.put("inWishlist", added);
+        resp.put("message", added ? "Added to wishlist" : "Removed from wishlist");
+        return ResponseEntity.ok(ApiResponse.ok(resp));
+    }
+
+    @DeleteMapping("/wishlist/{productId}")
+    public ResponseEntity<ApiResponse<String>> removeFromWishlist(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long productId
+    ) {
+        wishlistService.removeFromWishlist(principal.getId(), productId);
+        return ResponseEntity.ok(ApiResponse.ok("Removed from wishlist", null));
     }
 }

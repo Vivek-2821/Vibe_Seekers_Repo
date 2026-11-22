@@ -32,6 +32,11 @@ public class Order {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal shippingCharge = BigDecimal.ZERO;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    private String couponCode;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
@@ -122,6 +127,22 @@ public class Order {
 
     public void setShippingCharge(BigDecimal shippingCharge) {
         this.shippingCharge = shippingCharge;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
     }
 
     public BigDecimal getTotalAmount() {

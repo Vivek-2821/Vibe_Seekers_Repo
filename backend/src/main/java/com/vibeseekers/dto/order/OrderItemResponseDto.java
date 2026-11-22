@@ -8,6 +8,7 @@ public class OrderItemResponseDto {
     private Long productId;
     private String productName;
     private String size;
+    private String color;
     private Integer quantity;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
@@ -46,6 +47,14 @@ public class OrderItemResponseDto {
 
     public void setSize(String size) {
         this.size = size;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public Integer getQuantity() {

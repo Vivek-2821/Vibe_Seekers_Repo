@@ -32,6 +32,7 @@ public class OrderService {
     private final MediaStorageService mediaStorageService;
     private final MailService mailService;
     private final ShiprocketService shiprocketService;
+    private final CouponService couponService;
 
     private static final AtomicInteger orderCounter = new AtomicInteger(1001);
 
@@ -43,7 +44,8 @@ public class OrderService {
                         StoreSettingService storeSettingService,
                         MediaStorageService mediaStorageService,
                         MailService mailService,
-                        ShiprocketService shiprocketService) {
+                        ShiprocketService shiprocketService,
+                        CouponService couponService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.paymentRepository = paymentRepository;
@@ -53,6 +55,7 @@ public class OrderService {
         this.mediaStorageService = mediaStorageService;
         this.mailService = mailService;
         this.shiprocketService = shiprocketService;
+        this.couponService = couponService;
     }
 
     @Transactional
@@ -107,14 +110,31 @@ public class OrderService {
                     lineTotal,
                     product.getPrimaryImageUrl()
             );
+            orderItem.setColor(itemDto.getColor());
             items.add(orderItem);
         }
 
         order.setSubtotal(subtotal);
+
+        // Apply coupon code if provided
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        if (request.getCouponCode() != null && !request.getCouponCode().trim().isEmpty()) {
+            try {
+                Map<String, Object> couponResult = couponService.validateCoupon(request.getCouponCode().trim(), subtotal);
+                discountAmount = (BigDecimal) couponResult.get("discountAmount");
+                order.setCouponCode(request.getCouponCode().trim().toUpperCase());
+            } catch (Exception ignored) {
+            }
+        }
+        order.setDiscountAmount(discountAmount);
+
         // Free shipping on prepaid streetwear orders!
         BigDecimal shippingCharge = BigDecimal.ZERO;
         order.setShippingCharge(shippingCharge);
-        order.setTotalAmount(subtotal.add(shippingCharge));
+
+        BigDecimal finalAmount = subtotal.subtract(discountAmount).add(shippingCharge);
+        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) finalAmount = BigDecimal.ZERO;
+        order.setTotalAmount(finalAmount);
 
         Order savedOrder = orderRepository.save(order);
 
@@ -278,6 +298,8 @@ public class OrderService {
         dto.setOrderStatus(order.getOrderStatus());
         dto.setSubtotal(order.getSubtotal());
         dto.setShippingCharge(order.getShippingCharge());
+        dto.setDiscountAmount(order.getDiscountAmount());
+        dto.setCouponCode(order.getCouponCode());
         dto.setTotalAmount(order.getTotalAmount());
         dto.setShippingAddress(order.getShippingAddress());
         dto.setCustomerNotes(order.getCustomerNotes());
@@ -299,6 +321,7 @@ public class OrderService {
                 if (item.getProduct() != null) itemDto.setProductId(item.getProduct().getId());
                 itemDto.setProductName(item.getProductName());
                 itemDto.setSize(item.getSize());
+                itemDto.setColor(item.getColor());
                 itemDto.setQuantity(item.getQuantity());
                 itemDto.setUnitPrice(item.getUnitPrice());
                 itemDto.setTotalPrice(item.getTotalPrice());

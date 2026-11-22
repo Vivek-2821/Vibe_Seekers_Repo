@@ -19,6 +19,8 @@ public class OrderResponseDto {
     private OrderStatus orderStatus;
     private BigDecimal subtotal;
     private BigDecimal shippingCharge;
+    private BigDecimal discountAmount;
+    private String couponCode;
     private BigDecimal totalAmount;
     private ShippingAddress shippingAddress;
     private List<OrderItemResponseDto> items = new ArrayList<>();
@@ -108,6 +110,22 @@ public class OrderResponseDto {
 
     public void setShippingCharge(BigDecimal shippingCharge) {
         this.shippingCharge = shippingCharge;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
     }
 
     public BigDecimal getTotalAmount() {

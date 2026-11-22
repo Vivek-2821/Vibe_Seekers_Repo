@@ -42,6 +42,9 @@ public class ProductService {
                                                       BigDecimal minPrice,
                                                       BigDecimal maxPrice,
                                                       String size,
+                                                      String color,
+                                                      Boolean bestSellerOnly,
+                                                      Boolean newArrivalOnly,
                                                       String keyword,
                                                       String sortBy,
                                                       int page,
@@ -51,17 +54,27 @@ public class ProductService {
             sort = Sort.by(Sort.Direction.ASC, "price");
         } else if ("price_desc".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(Sort.Direction.DESC, "price");
+        } else if ("popular".equalsIgnoreCase(sortBy) || "popularity".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Direction.DESC, "isBestSeller").and(Sort.by(Sort.Direction.DESC, "createdAt"));
         } else if ("newest".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(Sort.Direction.DESC, "createdAt");
         }
 
         Pageable pageable = PageRequest.of(page, pageSize, sort);
-        Page<Product> products = productRepository.findWithFilters(true, category, minPrice, maxPrice, size, keyword, pageable);
+        Page<Product> products = productRepository.findWithFilters(
+                true, category, minPrice, maxPrice, size, color, bestSellerOnly, newArrivalOnly, keyword, pageable
+        );
         return products.map(this::mapToResponseDto);
     }
 
     public List<ProductResponseDto> getNewArrivals() {
         return productRepository.findByIsActiveTrueAndIsNewArrivalTrue().stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductResponseDto> getBestSellers() {
+        return productRepository.findByIsActiveTrueAndIsBestSellerTrue().stream()
                 .map(this::mapToResponseDto)
                 .collect(Collectors.toList());
     }
@@ -110,6 +123,11 @@ public class ProductService {
         product.setDescription(request.getDescription());
         product.setFabricDetails(request.getFabricDetails());
         product.setNewArrival(request.isNewArrival());
+        product.setBestSeller(request.isBestSeller());
+        product.setColors(request.getColors());
+        product.setGsm(request.getGsm());
+        product.setWashingInstructions(request.getWashingInstructions());
+        product.setCollectionName(request.getCollectionName());
         product.setActive(request.isActive());
 
         Product savedProduct = productRepository.save(product);
@@ -144,6 +162,11 @@ public class ProductService {
         product.setDescription(request.getDescription());
         product.setFabricDetails(request.getFabricDetails());
         product.setNewArrival(request.isNewArrival());
+        product.setBestSeller(request.isBestSeller());
+        product.setColors(request.getColors());
+        product.setGsm(request.getGsm());
+        product.setWashingInstructions(request.getWashingInstructions());
+        product.setCollectionName(request.getCollectionName());
         product.setActive(request.isActive());
 
         // Update size stocks
@@ -274,6 +297,11 @@ public class ProductService {
         dto.setDescription(product.getDescription());
         dto.setFabricDetails(product.getFabricDetails());
         dto.setNewArrival(product.isNewArrival());
+        dto.setBestSeller(product.isBestSeller());
+        dto.setColors(product.getColors());
+        dto.setGsm(product.getGsm());
+        dto.setWashingInstructions(product.getWashingInstructions());
+        dto.setCollectionName(product.getCollectionName());
         dto.setActive(product.isActive());
         dto.setCreatedAt(product.getCreatedAt());
 

@@ -454,7 +454,7 @@ export const Orders = () => {
                       )}
                       <div>
                         <p className="font-bold text-white">{item.productName}</p>
-                        <p className="text-zinc-500">Size: {item.size} • Qty: {item.quantity}</p>
+                        <p className="text-zinc-500">Size: {item.size} {item.color ? `• Color: ${item.color}` : ''} • Qty: {item.quantity}</p>
                       </div>
                     </div>
                     <span className="font-black text-white">₹{item.totalPrice?.toLocaleString('en-IN')}</span>
@@ -471,10 +471,13 @@ export const Orders = () => {
                 onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
                 className="bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-vibe-accent"
               >
+                <option value="ORDER_PLACED">ORDER PLACED</option>
+                <option value="CONFIRMED">CONFIRMED</option>
                 <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
                 <option value="PAYMENT_VERIFIED">PAYMENT VERIFIED</option>
                 <option value="PROCESSING">PROCESSING</option>
                 <option value="SHIPPED">SHIPPED</option>
+                <option value="OUT_FOR_DELIVERY">OUT FOR DELIVERY</option>
                 <option value="DELIVERED">DELIVERED</option>
                 <option value="CANCELLED">CANCELLED</option>
               </select>

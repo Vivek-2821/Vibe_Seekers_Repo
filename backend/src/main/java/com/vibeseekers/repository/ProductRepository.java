@@ -22,6 +22,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByIsActiveTrueAndIsNewArrivalTrue();
 
+    List<Product> findByIsActiveTrueAndIsBestSellerTrue();
+
     List<Product> findByIsActiveTrueAndCategory(ProductCategory category);
 
     @Query("SELECT DISTINCT p FROM Product p " +
@@ -31,12 +33,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "AND (:minPrice IS NULL OR p.price >= :minPrice) " +
            "AND (:maxPrice IS NULL OR p.price <= :maxPrice) " +
            "AND (:size IS NULL OR (s.size = :size AND s.stock > 0)) " +
-           "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:color IS NULL OR LOWER(p.colors) LIKE LOWER(CONCAT('%', :color, '%'))) " +
+           "AND (:bestSellerOnly IS NULL OR :bestSellerOnly = false OR p.isBestSeller = true) " +
+           "AND (:newArrivalOnly IS NULL OR :newArrivalOnly = false OR p.isNewArrival = true) " +
+           "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.colors) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Product> findWithFilters(@Param("activeOnly") boolean activeOnly,
                                  @Param("category") ProductCategory category,
                                  @Param("minPrice") BigDecimal minPrice,
                                  @Param("maxPrice") BigDecimal maxPrice,
                                  @Param("size") String size,
+                                 @Param("color") String color,
+                                 @Param("bestSellerOnly") Boolean bestSellerOnly,
+                                 @Param("newArrivalOnly") Boolean newArrivalOnly,
                                  @Param("keyword") String keyword,
                                  Pageable pageable);
 

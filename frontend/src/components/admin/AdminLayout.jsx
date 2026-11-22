@@ -13,6 +13,7 @@ import {
   X,
   ShieldCheck,
   Bell,
+  Tag,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -31,6 +32,7 @@ export const AdminLayout = () => {
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { name: 'Products & Media', path: '/admin/products', icon: Shirt },
     { name: 'Orders & Payments', path: '/admin/orders', icon: ShoppingBag },
+    { name: 'Coupons & Promos', path: '/admin/coupons', icon: Tag },
     { name: 'Shiprocket Logistics', path: '/admin/shiprocket', icon: Truck },
     { name: 'Customers', path: '/admin/customers', icon: Users },
     { name: 'Store Settings', path: '/admin/settings', icon: Settings },

@@ -43,6 +43,17 @@ public class Product {
     @Column(nullable = false)
     private boolean isNewArrival = false;
 
+    private Boolean isBestSeller = false;
+
+    private String colors; // e.g. "Acid Black, Vintage White, Olive, Charcoal"
+
+    private String gsm; // e.g. "240 GSM", "400 GSM Heavyweight Fleece"
+
+    @Column(columnDefinition = "TEXT")
+    private String washingInstructions;
+
+    private String collectionName; // e.g. "Monochrome Drop 01", "Winter Cargo '26"
+
     @Column(nullable = false)
     private boolean isActive = true;
 
@@ -149,6 +160,54 @@ public class Product {
 
     public void setNewArrival(boolean newArrival) {
         isNewArrival = newArrival;
+    }
+
+    public Boolean isBestSeller() {
+        return isBestSeller != null && isBestSeller;
+    }
+
+    public Boolean getIsBestSeller() {
+        return isBestSeller != null && isBestSeller;
+    }
+
+    public void setBestSeller(Boolean bestSeller) {
+        this.isBestSeller = bestSeller != null ? bestSeller : false;
+    }
+
+    public void setIsBestSeller(Boolean bestSeller) {
+        this.isBestSeller = bestSeller != null ? bestSeller : false;
+    }
+
+    public String getColors() {
+        return colors;
+    }
+
+    public void setColors(String colors) {
+        this.colors = colors;
+    }
+
+    public String getGsm() {
+        return gsm;
+    }
+
+    public void setGsm(String gsm) {
+        this.gsm = gsm;
+    }
+
+    public String getWashingInstructions() {
+        return washingInstructions;
+    }
+
+    public void setWashingInstructions(String washingInstructions) {
+        this.washingInstructions = washingInstructions;
+    }
+
+    public String getCollectionName() {
+        return collectionName;
+    }
+
+    public void setCollectionName(String collectionName) {
+        this.collectionName = collectionName;
     }
 
     public boolean isActive() {

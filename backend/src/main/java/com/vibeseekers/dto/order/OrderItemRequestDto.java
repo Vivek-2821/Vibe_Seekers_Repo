@@ -12,6 +12,8 @@ public class OrderItemRequestDto {
     @NotBlank(message = "Size is required")
     private String size;
 
+    private String color;
+
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
@@ -39,6 +41,14 @@ public class OrderItemRequestDto {
 
     public void setSize(String size) {
         this.size = size;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public Integer getQuantity() {

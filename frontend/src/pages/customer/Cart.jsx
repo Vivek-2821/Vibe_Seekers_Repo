@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldAlert, Truck } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Tag, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
 export const Cart = () => {
-  const { items, updateQuantity, removeItem, clearCart, subtotal, shippingEstimate, itemCount } = useCart();
+  const {
+    items,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    subtotal,
+    discountAmount,
+    finalTotal,
+    shippingEstimate,
+    itemCount,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    couponError,
+    couponLoading,
+  } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [couponCode, setCouponCode] = useState('');
 
   const handleProceedToCheckout = () => {
     if (!isAuthenticated) {
@@ -17,190 +33,252 @@ export const Cart = () => {
     }
   };
 
+  const handleCouponSubmit = async (e) => {
+    e.preventDefault();
+    if (!couponCode.trim()) return;
+    const ok = await applyCoupon(couponCode.trim());
+    if (ok) setCouponCode('');
+  };
+
   if (items.length === 0) {
     return (
-      <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-6">
-        <div className="w-20 h-20 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center mx-auto text-zinc-500">
-          <ShoppingBag size={36} />
+      <div className="bg-[#080808] min-h-[70vh] flex items-center justify-center px-4">
+        <div className="max-w-md mx-auto py-16 text-center space-y-6">
+          <div className="w-20 h-20 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center mx-auto text-zinc-500">
+            <ShoppingBag size={32} />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+            Your Shopping Bag Is Empty
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed uppercase tracking-wider">
+            Explore our heavyweight t-shirts, fleece hoodies, and cargo statement drops.
+          </p>
+          <Link
+            to="/shop"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-white hover:bg-zinc-200 text-black text-xs font-black uppercase tracking-[0.2em] transition-all"
+          >
+            <span>Explore Drops</span>
+            <ArrowRight size={16} />
+          </Link>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
-          Your Shopping Bag Is Empty
-        </h2>
-        <p className="text-xs sm:text-sm text-zinc-400">
-          Explore our heavyweight t-shirts, fleece hoodies, and cargo statement jackets.
-        </p>
-        <Link
-          to="/shop"
-          className="inline-flex items-center gap-2 px-8 py-3.5 bg-vibe-accent hover:bg-vibe-accentHover text-white text-xs font-black uppercase tracking-wider rounded-lg transition-all"
-        >
-          <span>Explore Streetwear</span>
-          <ArrowRight size={16} />
-        </Link>
       </div>
     );
   }
 
-  const grandTotal = subtotal + shippingEstimate;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      
-      {/* Page Title */}
-      <div className="border-b border-zinc-800 pb-6 mb-8 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-black uppercase tracking-widest text-vibe-accent">
-            Shopping Bag
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white mt-1">
-            Review Your Items ({itemCount})
-          </h1>
-        </div>
-        <button
-          onClick={clearCart}
-          className="text-xs font-bold text-zinc-400 hover:text-red-400 uppercase tracking-wider transition-colors"
-        >
-          Clear Bag
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <div className="bg-[#080808] min-h-screen text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         
-        {/* Left: Bag Items List */}
-        <div className="lg:col-span-2 space-y-4">
-          
-          {items.map((item) => (
-            <div
-              key={`${item.productId}-${item.size}`}
-              className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 sm:p-5 flex gap-4 sm:gap-6 items-center"
-            >
-              <Link
-                to={`/product/${item.slug}`}
-                className="w-20 sm:w-24 aspect-[4/5] rounded-lg overflow-hidden bg-zinc-950 shrink-0"
-              >
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                />
-              </Link>
+        {/* Page Header */}
+        <div className="border-b border-zinc-800 pb-6 mb-8 flex items-center justify-between">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
+              STREETWEAR BAG
+            </span>
+            <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white mt-1">
+              REVIEW YOUR ITEMS ({itemCount})
+            </h1>
+          </div>
+          <button
+            onClick={clearCart}
+            className="text-xs font-semibold text-zinc-400 hover:text-red-400 uppercase tracking-wider transition-colors"
+          >
+            Empty Bag
+          </button>
+        </div>
 
-              <div className="flex-1 min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
+          {/* Left: Items List (8 cols) */}
+          <div className="lg:col-span-8 space-y-4">
+            {items.map((item) => (
+              <div
+                key={`${item.productId}-${item.size}-${item.color}`}
+                className="bg-[#121212] border border-zinc-800 p-4 sm:p-5 flex gap-4 sm:gap-6 items-center"
+              >
                 <Link
                   to={`/product/${item.slug}`}
-                  className="font-bold text-sm sm:text-base text-white hover:text-vibe-accent transition-colors truncate block"
+                  className="w-20 sm:w-28 aspect-[3/4] bg-zinc-950 border border-zinc-800 shrink-0 overflow-hidden"
                 >
-                  {item.name}
+                  <img
+                    src={item.imageUrl || '/assets/logo.png'}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
                 </Link>
 
-                <div className="flex items-center gap-3 mt-1 text-xs text-zinc-400">
-                  <span className="bg-zinc-800 px-2 py-0.5 rounded font-bold text-white">
-                    Size: {item.size}
-                  </span>
-                  <span>₹{item.price.toLocaleString('en-IN')} each</span>
-                </div>
-
-                <div className="flex items-center justify-between mt-4">
-                  {/* Quantity modifier */}
-                  <div className="flex items-center border border-zinc-800 rounded-lg bg-zinc-950">
-                    <button
-                      onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                      className="p-1.5 text-zinc-400 hover:text-white transition-colors"
-                      aria-label="Decrease quantity"
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <Link
+                      to={`/product/${item.slug}`}
+                      className="font-bold text-sm sm:text-base text-white hover:underline uppercase tracking-wide truncate block"
                     >
-                      <Minus size={14} />
-                    </button>
-                    <span className="px-3 text-xs font-bold text-white">{item.quantity}</span>
+                      {item.name}
+                    </Link>
                     <button
-                      onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                      className="p-1.5 text-zinc-400 hover:text-white transition-colors"
-                      aria-label="Increase quantity"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-
-                  {/* Line Total & Remove */}
-                  <div className="flex items-center gap-4">
-                    <span className="font-black text-sm sm:text-base text-white">
-                      ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                    </span>
-                    <button
-                      onClick={() => removeItem(item.productId, item.size)}
+                      onClick={() => removeItem(item.productId, item.size, item.color)}
                       className="text-zinc-500 hover:text-red-400 transition-colors p-1"
-                      aria-label="Remove item"
+                      title="Remove Item"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-zinc-400 font-medium">
+                    <span className="bg-zinc-800 px-2 py-0.5 text-white uppercase text-[11px] font-bold">
+                      SIZE: {item.size}
+                    </span>
+                    {item.color && (
+                      <span className="bg-zinc-800 px-2 py-0.5 text-zinc-300 uppercase text-[11px]">
+                        COLOR: {item.color}
+                      </span>
+                    )}
+                    <span>•</span>
+                    <span className="font-mono text-zinc-300">₹{item.price.toLocaleString('en-IN')} each</span>
+                  </div>
+
+                  {/* Quantity & Item Subtotal */}
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center border border-zinc-700 bg-black">
+                      <button
+                        onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity - 1)}
+                        className="px-2.5 py-1 text-zinc-400 hover:text-white transition-colors"
+                      >
+                        <Minus size={13} />
+                      </button>
+                      <span className="px-3 text-xs font-bold text-white">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity + 1)}
+                        className="px-2.5 py-1 text-zinc-400 hover:text-white transition-colors"
+                      >
+                        <Plus size={13} />
+                      </button>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-sm sm:text-base font-extrabold text-white">
+                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                      </span>
+                      {item.mrp && item.mrp > item.price && (
+                        <span className="block text-[11px] text-zinc-500 line-through">
+                          ₹{(item.mrp * item.quantity).toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {/* Policy Notice Box */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3 text-amber-300 text-xs leading-relaxed">
-            <ShieldAlert size={20} className="shrink-0 text-amber-400 mt-0.5" />
-            <span>
-              <strong>Note on Returns & Exclusivity:</strong> We currently do not offer returns or exchanges on placed orders. All items are quality-inspected before dispatch. Please verify your sizes before proceeding to checkout.
-            </span>
+            {/* Strict Notice banner */}
+            <div className="p-4 bg-zinc-950 border border-zinc-800 flex items-start gap-3 text-xs text-zinc-400">
+              <ShieldAlert size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-white uppercase">Prepaid Streetwear Policy: </strong>
+                All orders are dispatched via tracked express courier across India. Due to limited batch exclusivity and hygiene standards, returns are not applicable.
+              </div>
+            </div>
           </div>
 
-        </div>
+          {/* Right: Summary & Promo Code (4 cols) */}
+          <div className="lg:col-span-4">
+            <div className="bg-[#121212] border border-zinc-800 p-6 space-y-6 sticky top-28">
+              
+              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white pb-3 border-b border-zinc-800">
+                ORDER SUMMARY
+              </h3>
 
-        {/* Right: Order Summary */}
-        <div className="space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-            <h3 className="text-sm font-black uppercase tracking-wider text-white border-b border-zinc-800 pb-3">
-              Order Summary
-            </h3>
-
-            <div className="space-y-2.5 text-xs text-zinc-300">
-              <div className="flex justify-between">
-                <span>Bag Subtotal</span>
-                <span className="font-bold text-white">₹{subtotal.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between items-center text-emerald-400">
-                <span className="flex items-center gap-1">
-                  <Truck size={14} /> Express Pan-India Shipping
+              {/* Coupon Form */}
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-2">
+                  Promotional Coupon
                 </span>
-                <span className="font-bold uppercase tracking-wider">Free (₹0)</span>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-3 bg-emerald-950/40 border border-emerald-800/80 text-xs">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-emerald-400" />
+                      <div>
+                        <span className="font-bold text-emerald-300 uppercase tracking-wider">
+                          {appliedCoupon.code}
+                        </span>
+                        <p className="text-[11px] text-zinc-400">
+                          {appliedCoupon.discountPercent}% discount applied
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={removeCoupon}
+                      className="text-xs text-zinc-400 hover:text-red-400 underline font-semibold"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleCouponSubmit} className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="ENTER COUPON (VIBE10)"
+                        className="w-full pl-9 pr-3 py-2.5 bg-black border border-zinc-800 text-xs font-mono uppercase tracking-wider text-white placeholder-zinc-500 outline-none focus:border-white"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-4 py-2.5 bg-white text-black text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                    >
+                      {couponLoading ? '...' : 'APPLY'}
+                    </button>
+                  </form>
+                )}
+                {couponError && <p className="text-xs text-red-400 mt-1.5">{couponError}</p>}
               </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Payment Mode</span>
-                <span className="font-bold text-vibe-accent">Prepaid UPI Only</span>
+
+              {/* Price Calculation Lines */}
+              <div className="space-y-2.5 text-xs text-zinc-300 pt-2 border-t border-zinc-800/80">
+                <div className="flex justify-between">
+                  <span>Bag Subtotal</span>
+                  <span className="font-bold text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-emerald-400">
+                    <span>Coupon Discount</span>
+                    <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>Express Courier Shipping</span>
+                  <span className="text-emerald-400 font-bold uppercase">FREE</span>
+                </div>
+                <div className="border-t border-zinc-800 pt-3 flex justify-between text-base font-black text-white">
+                  <span>ESTIMATED TOTAL</span>
+                  <span className="tracking-wide">₹{finalTotal.toLocaleString('en-IN')}</span>
+                </div>
               </div>
+
+              {/* Checkout Button */}
+              <button
+                onClick={handleProceedToCheckout}
+                className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-extrabold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-2xl"
+              >
+                <span>PROCEED TO PREPAID CHECKOUT</span>
+                <ArrowRight size={16} />
+              </button>
+
+              <div className="text-[10px] text-zinc-500 text-center flex items-center justify-center gap-1.5 pt-1">
+                <ShieldCheck size={13} className="text-zinc-400" />
+                <span>100% Secure UPI / PhonePe / Card Gateway</span>
+              </div>
+
             </div>
-
-            <div className="border-t border-zinc-800 pt-3 flex justify-between items-baseline">
-              <span className="font-black uppercase text-sm text-white">Total Amount</span>
-              <span className="text-2xl font-black text-white">
-                ₹{grandTotal.toLocaleString('en-IN')}
-              </span>
-            </div>
-
-            <button
-              onClick={handleProceedToCheckout}
-              className="w-full py-4 bg-vibe-accent hover:bg-vibe-accentHover text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-vibe-accent/25 hover:scale-[1.02]"
-            >
-              <span>Proceed to Checkout</span>
-              <ArrowRight size={18} />
-            </button>
-
-            <p className="text-[11px] text-zinc-500 text-center">
-              Requires user login • Secure PhonePe QR & UPI confirmation
-            </p>
           </div>
 
-          <Link
-            to="/shop"
-            className="block text-center text-xs font-bold text-zinc-400 hover:text-white uppercase tracking-wider"
-          >
-            ← Continue Shopping
-          </Link>
         </div>
 
       </div>
-
     </div>
   );
 };

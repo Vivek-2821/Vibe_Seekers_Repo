@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Filter, X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Filter, X, SlidersHorizontal, ArrowUpDown, Check, RefreshCw } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { ProductCard } from '../../components/shop/ProductCard';
 
@@ -10,11 +11,14 @@ export const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [totalElements, setTotalElements] = useState(0);
 
-  // Active filter state
+  // Active filter state from URL search params
   const selectedCategory = searchParams.get('category') || '';
   const selectedSize = searchParams.get('size') || '';
+  const selectedColor = searchParams.get('color') || '';
   const searchQuery = searchParams.get('keyword') || '';
+  const filterType = searchParams.get('filter') || ''; // 'new', 'bestseller'
   const sortBy = searchParams.get('sortBy') || 'newest';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
@@ -27,6 +31,7 @@ export const Shop = () => {
   ];
 
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  const popularColors = ['Black', 'White', 'Acid', 'Grey', 'Olive', 'Charcoal'];
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -35,16 +40,21 @@ export const Shop = () => {
         const params = {
           category: selectedCategory || undefined,
           size: selectedSize || undefined,
+          color: selectedColor || undefined,
           keyword: searchQuery || undefined,
           minPrice: minPrice || undefined,
           maxPrice: maxPrice || undefined,
+          newArrivalOnly: filterType === 'new' ? true : undefined,
+          bestSellerOnly: filterType === 'bestseller' ? true : undefined,
           sortBy,
           page: 0,
-          pageSize: 40,
+          pageSize: 60,
         };
 
         const res = await axiosInstance.get('/api/public/products', { params });
-        setProducts(res.data.data.content || []);
+        const data = res.data?.data || res.data || {};
+        setProducts(data.content || []);
+        setTotalElements(data.totalElements || (data.content ? data.content.length : 0));
       } catch (err) {
         console.error('Failed to load shop products', err);
       } finally {
@@ -53,7 +63,7 @@ export const Shop = () => {
     };
 
     fetchProducts();
-  }, [selectedCategory, selectedSize, searchQuery, sortBy, minPrice, maxPrice]);
+  }, [selectedCategory, selectedSize, selectedColor, searchQuery, filterType, sortBy, minPrice, maxPrice]);
 
   const updateFilter = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
@@ -69,243 +79,295 @@ export const Shop = () => {
     setSearchParams(new URLSearchParams());
   };
 
-  const hasActiveFilters = !!(selectedCategory || selectedSize || searchQuery || minPrice || maxPrice);
+  const hasActiveFilters = !!(
+    selectedCategory ||
+    selectedSize ||
+    selectedColor ||
+    searchQuery ||
+    filterType ||
+    minPrice ||
+    maxPrice
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      
-      {/* Header & Title */}
-      <div className="border-b border-zinc-800 pb-6 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <span className="text-xs font-black uppercase tracking-widest text-vibe-accent">
-            Official Store Catalog
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white mt-1">
-            {selectedCategory
-              ? categories.find((c) => c.value === selectedCategory)?.label
-              : 'Streetwear Collection'}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Prepaid orders only • Pan-India doorstep delivery • Free shipping on all orders
-          </p>
-        </div>
-
-        {/* Sort & Mobile Filter Toggle */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-            className="md:hidden flex items-center gap-2 px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-bold uppercase text-white"
-          >
-            <SlidersHorizontal size={16} />
-            <span>Filters</span>
-          </button>
-
-          <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
-            <ArrowUpDown size={15} className="text-zinc-500" />
-            <select
-              value={sortBy}
-              onChange={(e) => updateFilter('sortBy', e.target.value)}
-              className="bg-transparent text-xs font-bold text-zinc-200 uppercase focus:outline-none cursor-pointer"
-            >
-              <option value="newest" className="bg-zinc-900 text-white">Newest Drop</option>
-              <option value="price_asc" className="bg-zinc-900 text-white">Price: Low to High</option>
-              <option value="price_desc" className="bg-zinc-900 text-white">Price: High to Low</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div className="bg-[#080808] min-h-screen text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         
-        {/* Desktop Sidebar Filters */}
-        <aside className="hidden md:block space-y-6">
-          
-          {hasActiveFilters && (
-            <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-300">Filters Applied</span>
-              <button
-                onClick={clearAllFilters}
-                className="text-xs font-bold text-vibe-accent hover:underline flex items-center gap-1"
-              >
-                <X size={14} /> Clear All
-              </button>
+        {/* Header & Page Title */}
+        <div className="border-b border-zinc-800 pb-8 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
+              <span>VAULT CATALOG</span>
+              {filterType === 'new' && <span className="text-white font-extrabold">• NEW DROPS</span>}
+              {filterType === 'bestseller' && <span className="text-white font-extrabold">• BEST SELLERS</span>}
             </div>
-          )}
-
-          {/* Categories */}
-          <div className="border border-zinc-800/80 rounded-xl p-5 bg-zinc-900/30 space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">Category</h3>
-            <div className="space-y-1.5">
-              {categories.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => updateFilter('category', cat.value)}
-                  className={`w-full text-left text-xs py-2 px-3 rounded-lg font-bold transition-all ${
-                    selectedCategory === cat.value
-                      ? 'bg-vibe-accent text-white shadow-md'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white mt-1">
+              {selectedCategory
+                ? categories.find((c) => c.value === selectedCategory)?.label
+                : filterType === 'new'
+                ? 'NEW ARRIVALS'
+                : filterType === 'bestseller'
+                ? 'BEST SELLERS'
+                : 'STREETWEAR COLLECTION'}
+            </h1>
+            <p className="text-xs text-zinc-400 mt-2 uppercase tracking-wider">
+              Showing {products.length} {products.length === 1 ? 'garment' : 'garments'} • Free express courier delivery pan-India
+            </p>
           </div>
 
-          {/* Size Filter */}
-          <div className="border border-zinc-800/80 rounded-xl p-5 bg-zinc-900/30 space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">Select Size</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => updateFilter('size', '')}
-                className={`text-xs font-bold py-2 rounded-lg border transition-all ${
-                  !selectedSize
-                    ? 'bg-white text-black border-white'
-                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600'
-                }`}
+          {/* Sort & Filter Toggle Actions */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+              className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-[#141414] border border-zinc-800 text-xs font-bold uppercase tracking-wider text-white"
+            >
+              <SlidersHorizontal size={15} />
+              <span>Filters {hasActiveFilters && '• Active'}</span>
+            </button>
+
+            {/* Sort Selector */}
+            <div className="relative flex items-center bg-[#141414] border border-zinc-800 px-3 py-2">
+              <ArrowUpDown size={14} className="text-zinc-400 mr-2" />
+              <select
+                value={sortBy}
+                onChange={(e) => updateFilter('sortBy', e.target.value)}
+                className="bg-transparent text-xs font-bold uppercase tracking-wider text-white outline-none cursor-pointer pr-4"
               >
-                All
-              </button>
-              {sizes.map((sz) => (
-                <button
-                  key={sz}
-                  onClick={() => updateFilter('size', sz)}
-                  className={`text-xs font-bold py-2 rounded-lg border transition-all ${
-                    selectedSize === sz
-                      ? 'bg-vibe-accent text-white border-vibe-accent'
-                      : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-600'
-                  }`}
-                >
-                  {sz}
-                </button>
-              ))}
+                <option value="newest" className="bg-zinc-900">Newest Drops</option>
+                <option value="price_asc" className="bg-zinc-900">Price: Low to High</option>
+                <option value="price_desc" className="bg-zinc-900">Price: High to Low</option>
+                <option value="popularity" className="bg-zinc-900">Popularity</option>
+              </select>
             </div>
           </div>
+        </div>
 
-          {/* Price Filters */}
-          <div className="border border-zinc-800/80 rounded-xl p-5 bg-zinc-900/30 space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">Price Range (₹)</h3>
-            <div className="space-y-2">
-              {[
-                { label: 'Under ₹1,500', min: '', max: '1500' },
-                { label: '₹1,500 – ₹2,500', min: '1500', max: '2500' },
-                { label: 'Above ₹2,500', min: '2500', max: '' },
-              ].map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    const newParams = new URLSearchParams(searchParams);
-                    if (p.min) newParams.set('minPrice', p.min); else newParams.delete('minPrice');
-                    if (p.max) newParams.set('maxPrice', p.max); else newParams.delete('maxPrice');
-                    setSearchParams(newParams);
-                  }}
-                  className="w-full text-left text-xs py-1.5 text-zinc-400 hover:text-vibe-accent font-medium transition-colors"
-                >
-                  • {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-        </aside>
-
-        {/* Mobile Filters Drawer Modal */}
-        {mobileFilterOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end md:hidden">
-            <div className="w-80 bg-zinc-950 border-l border-zinc-800 h-full p-6 overflow-y-auto space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-                <h3 className="font-black uppercase text-sm text-white">Filter Products</h3>
-                <button onClick={() => setMobileFilterOpen(false)} className="text-zinc-400 hover:text-white">
-                  <X size={22} />
-                </button>
-              </div>
-
-              {/* Categories */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase text-zinc-400">Category</h4>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.value}
-                    onClick={() => {
-                      updateFilter('category', cat.value);
-                      setMobileFilterOpen(false);
-                    }}
-                    className={`w-full text-left text-xs py-2 px-3 rounded-lg font-bold ${
-                      selectedCategory === cat.value
-                        ? 'bg-vibe-accent text-white'
-                        : 'text-zinc-400 hover:bg-zinc-900'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Size */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase text-zinc-400">Size</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  {sizes.map((sz) => (
-                    <button
-                      key={sz}
-                      onClick={() => {
-                        updateFilter('size', sz);
-                        setMobileFilterOpen(false);
-                      }}
-                      className={`text-xs font-bold py-2 rounded-lg border ${
-                        selectedSize === sz
-                          ? 'bg-vibe-accent text-white border-vibe-accent'
-                          : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  clearAllFilters();
-                  setMobileFilterOpen(false);
-                }}
-                className="w-full py-2.5 bg-zinc-900 text-xs font-bold text-red-400 rounded-lg"
-              >
-                Clear All Filters
-              </button>
-            </div>
+        {/* Active Filter Badges */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-8 p-3 bg-[#111] border border-zinc-800/80">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mr-1">
+              Active Filters:
+            </span>
+            {selectedCategory && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
+                Category: {selectedCategory}
+                <button onClick={() => updateFilter('category', '')}><X size={12} /></button>
+              </span>
+            )}
+            {filterType && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
+                {filterType === 'new' ? 'New Drops' : 'Best Sellers'}
+                <button onClick={() => updateFilter('filter', '')}><X size={12} /></button>
+              </span>
+            )}
+            {selectedSize && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
+                Size: {selectedSize}
+                <button onClick={() => updateFilter('size', '')}><X size={12} /></button>
+              </span>
+            )}
+            {selectedColor && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
+                Color: {selectedColor}
+                <button onClick={() => updateFilter('color', '')}><X size={12} /></button>
+              </span>
+            )}
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
+                Search: "{searchQuery}"
+                <button onClick={() => updateFilter('keyword', '')}><X size={12} /></button>
+              </span>
+            )}
+            <button
+              onClick={clearAllFilters}
+              className="text-[11px] text-zinc-400 hover:text-white underline uppercase tracking-wider ml-auto"
+            >
+              Clear All
+            </button>
           </div>
         )}
 
-        {/* Product Catalog Grid */}
-        <main className="md:col-span-3">
-          {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="bg-zinc-900/40 rounded-xl aspect-[4/5] animate-pulse"></div>
-              ))}
+        {/* Main Layout: Sidebar Filters + Products Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Desktop Filters Sidebar */}
+          <aside className="hidden lg:block space-y-8 pr-6 border-r border-zinc-800/80">
+            {/* Category Filter */}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">
+                Garment Category
+              </h4>
+              <div className="space-y-1.5">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => updateFilter('category', cat.value)}
+                    className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
+                      selectedCategory === cat.value
+                        ? 'bg-white text-black font-bold'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    }`}
+                  >
+                    <span>{cat.label}</span>
+                    {selectedCategory === cat.value && <Check size={14} />}
+                  </button>
+                ))}
+              </div>
             </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-20 border border-dashed border-zinc-800 rounded-2xl p-8 space-y-4">
-              <p className="text-zinc-400 font-bold text-sm">No streetwear pieces match your filter criteria.</p>
+
+            {/* Quick Badges Filter */}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">
+                Drop Type
+              </h4>
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => updateFilter('filter', filterType === 'new' ? '' : 'new')}
+                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
+                    filterType === 'new' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
+                >
+                  <span>New Drops Only</span>
+                  {filterType === 'new' && <Check size={14} />}
+                </button>
+                <button
+                  onClick={() => updateFilter('filter', filterType === 'bestseller' ? '' : 'bestseller')}
+                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
+                    filterType === 'bestseller' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
+                >
+                  <span>Best Sellers Only</span>
+                  {filterType === 'bestseller' && <Check size={14} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Size Filter */}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">
+                Size
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
+                {sizes.map((sz) => (
+                  <button
+                    key={sz}
+                    onClick={() => updateFilter('size', selectedSize === sz ? '' : sz)}
+                    className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
+                      selectedSize === sz
+                        ? 'bg-white text-black border-white'
+                        : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                    }`}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Color Filter */}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">
+                Color Tone
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {popularColors.map((col) => (
+                  <button
+                    key={col}
+                    onClick={() => updateFilter('color', selectedColor === col ? '' : col)}
+                    className={`px-3 py-1.5 text-xs font-medium uppercase tracking-wider border transition-colors ${
+                      selectedColor === col
+                        ? 'bg-white text-black border-white font-bold'
+                        : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                    }`}
+                  >
+                    {col}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Filter */}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">
+                Price (INR)
+              </h4>
+              <div className="space-y-1.5 text-xs">
+                <button
+                  onClick={() => {
+                    updateFilter('minPrice', '');
+                    updateFilter('maxPrice', '1499');
+                  }}
+                  className="w-full text-left py-1 text-zinc-400 hover:text-white"
+                >
+                  Under ₹1,499
+                </button>
+                <button
+                  onClick={() => {
+                    updateFilter('minPrice', '1500');
+                    updateFilter('maxPrice', '2499');
+                  }}
+                  className="w-full text-left py-1 text-zinc-400 hover:text-white"
+                >
+                  ₹1,500 - ₹2,499
+                </button>
+                <button
+                  onClick={() => {
+                    updateFilter('minPrice', '2500');
+                    updateFilter('maxPrice', '');
+                  }}
+                  className="w-full text-left py-1 text-zinc-400 hover:text-white"
+                >
+                  ₹2,500 and Above
+                </button>
+              </div>
+            </div>
+
+            {/* Reset Button */}
+            {hasActiveFilters && (
               <button
                 onClick={clearAllFilters}
-                className="px-6 py-2.5 bg-vibe-accent text-white text-xs font-bold uppercase tracking-wider rounded-lg"
+                className="w-full py-2.5 bg-zinc-900 border border-zinc-800 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
               >
                 Reset All Filters
               </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </main>
+            )}
+          </aside>
+
+          {/* Products Grid (3 cols on lg) */}
+          <main className="lg:col-span-3">
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="aspect-[3/4] bg-zinc-900 animate-pulse border border-zinc-800" />
+                ))}
+              </div>
+            ) : products.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-24 bg-[#0d0d0d] border border-zinc-800 p-8">
+                <p className="text-base font-bold uppercase tracking-wider text-white mb-2">
+                  No products matched your criteria
+                </p>
+                <p className="text-xs text-zinc-400 mb-6">
+                  Try broadening your filters or searching for alternative streetwear keywords.
+                </p>
+                <button
+                  onClick={clearAllFilters}
+                  className="px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-widest hover:bg-zinc-200 transition-colors"
+                >
+                  Reset All Filters
+                </button>
+              </div>
+            )}
+          </main>
+
+        </div>
 
       </div>
-
     </div>
   );
 };

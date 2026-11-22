@@ -27,6 +27,8 @@ public class OrderItem {
     @Column(nullable = false)
     private String size; // S, M, L, XL, XXL
 
+    private String color; // e.g. "Acid Black"
+
     @Column(nullable = false)
     private Integer quantity;
 
@@ -92,6 +94,14 @@ public class OrderItem {
 
     public void setSize(String size) {
         this.size = size;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public Integer getQuantity() {

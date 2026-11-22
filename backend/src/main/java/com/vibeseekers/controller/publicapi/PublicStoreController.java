@@ -28,15 +28,18 @@ public class PublicStoreController {
     private final StoreSettingService storeSettingService;
     private final ShiprocketService shiprocketService;
     private final ContactMessageRepository contactMessageRepository;
+    private final com.vibeseekers.service.CouponService couponService;
 
     public PublicStoreController(ProductService productService,
                                  StoreSettingService storeSettingService,
                                  ShiprocketService shiprocketService,
-                                 ContactMessageRepository contactMessageRepository) {
+                                 ContactMessageRepository contactMessageRepository,
+                                 com.vibeseekers.service.CouponService couponService) {
         this.productService = productService;
         this.storeSettingService = storeSettingService;
         this.shiprocketService = shiprocketService;
         this.contactMessageRepository = contactMessageRepository;
+        this.couponService = couponService;
     }
 
     @GetMapping("/products")
@@ -45,13 +48,16 @@ public class PublicStoreController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String size,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) Boolean bestSellerOnly,
+            @RequestParam(required = false) Boolean newArrivalOnly,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "newest") String sortBy,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int pageSize
     ) {
         Page<ProductResponseDto> products = productService.getPublicProducts(
-                category, minPrice, maxPrice, size, keyword, sortBy, page, pageSize
+                category, minPrice, maxPrice, size, color, bestSellerOnly, newArrivalOnly, keyword, sortBy, page, pageSize
         );
         return ResponseEntity.ok(ApiResponse.ok(products));
     }
@@ -65,6 +71,41 @@ public class PublicStoreController {
     @GetMapping("/new-arrivals")
     public ResponseEntity<ApiResponse<List<ProductResponseDto>>> getNewArrivals() {
         return ResponseEntity.ok(ApiResponse.ok(productService.getNewArrivals()));
+    }
+
+    @GetMapping("/best-sellers")
+    public ResponseEntity<ApiResponse<List<ProductResponseDto>>> getBestSellers() {
+        return ResponseEntity.ok(ApiResponse.ok(productService.getBestSellers()));
+    }
+
+    @PostMapping("/coupons/validate")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> validateCoupon(@RequestBody Map<String, Object> body) {
+        String code = (String) body.get("code");
+        BigDecimal orderAmount = body.get("orderAmount") != null
+                ? new BigDecimal(body.get("orderAmount").toString())
+                : BigDecimal.ZERO;
+        Map<String, Object> result = couponService.validateCoupon(code, orderAmount);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
+    @GetMapping("/search/suggestions")
+    public ResponseEntity<ApiResponse<List<Map<String, String>>>> getSearchSuggestions(@RequestParam String q) {
+        if (q == null || q.trim().length() < 2) {
+            return ResponseEntity.ok(ApiResponse.ok(List.of()));
+        }
+        Page<ProductResponseDto> results = productService.getPublicProducts(
+                null, null, null, null, null, null, null, q.trim(), "newest", 0, 6
+        );
+        List<Map<String, String>> suggestions = results.getContent().stream().map(p -> {
+            Map<String, String> item = new HashMap<>();
+            item.put("name", p.getName());
+            item.put("slug", p.getSlug());
+            item.put("category", p.getCategory().name());
+            item.put("price", "₹" + p.getPrice());
+            item.put("image", p.getPrimaryImageUrl());
+            return item;
+        }).collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok(suggestions));
     }
 
     @GetMapping("/categories/{category}")

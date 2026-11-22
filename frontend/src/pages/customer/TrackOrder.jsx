@@ -20,10 +20,10 @@ export const TrackOrder = () => {
 
     try {
       const res = await axiosInstance.get(`/api/tracking/${encodeURIComponent(queryToFetch.trim())}`);
-      setTrackingData(res.data.data);
+      setTrackingData(res.data?.data || res.data);
     } catch (err) {
       setError(
-        err.response?.data?.message || 'No shipment found with this Order ID or AWB. Please check and try again.'
+        err.response?.data?.message || 'No order or shipment found with this ID or AWB. Please verify and try again.'
       );
     } finally {
       setLoading(false);
@@ -42,220 +42,186 @@ export const TrackOrder = () => {
   };
 
   const steps = [
-    { key: 'PENDING_PAYMENT', label: 'Order Placed', desc: 'Prepaid details received' },
-    { key: 'PAYMENT_VERIFIED', label: 'Payment Approved', desc: 'Verified by Vivek / Admin' },
-    { key: 'PROCESSING', label: 'Quality Check & Packed', desc: 'Ready for courier handover' },
-    { key: 'SHIPPED', label: 'Dispatched via Shiprocket', desc: 'In Transit across India' },
-    { key: 'DELIVERED', label: 'Delivered', desc: 'At your doorstep' },
+    { key: 'ORDER_PLACED', altKey: 'PENDING_PAYMENT', label: 'Order Placed', desc: 'Prepaid order details received' },
+    { key: 'CONFIRMED', altKey: 'PAYMENT_VERIFIED', label: 'Order Confirmed', desc: 'Payment verified by Vibe Seekers team' },
+    { key: 'PROCESSING', altKey: 'PROCESSING', label: 'Processing', desc: 'Garments quality-checked & packed' },
+    { key: 'SHIPPED', altKey: 'SHIPPED', label: 'Shipped', desc: 'Dispatched via Express Courier' },
+    { key: 'OUT_FOR_DELIVERY', altKey: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', desc: 'Courier agent delivering today' },
+    { key: 'DELIVERED', altKey: 'DELIVERED', label: 'Delivered', desc: 'Handed over at your doorstep' },
   ];
 
-  const getStepStatus = (stepKey, currentStatus) => {
-    const orderProgression = ['PENDING_PAYMENT', 'PAYMENT_VERIFIED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
-    const currentIndex = orderProgression.indexOf(currentStatus);
-    const stepIndex = orderProgression.indexOf(stepKey);
+  const getStepStatus = (stepKey, altKey, currentStatus) => {
+    const orderProgression = [
+      ['ORDER_PLACED', 'PENDING_PAYMENT'],
+      ['CONFIRMED', 'PAYMENT_VERIFIED'],
+      ['PROCESSING'],
+      ['SHIPPED'],
+      ['OUT_FOR_DELIVERY'],
+      ['DELIVERED'],
+    ];
 
     if (currentStatus === 'CANCELLED') return 'cancelled';
+
+    let currentIndex = -1;
+    for (let i = 0; i < orderProgression.length; i++) {
+      if (orderProgression[i].includes(currentStatus)) {
+        currentIndex = i;
+        break;
+      }
+    }
+
+    let stepIndex = -1;
+    for (let i = 0; i < orderProgression.length; i++) {
+      if (orderProgression[i].includes(stepKey) || (altKey && orderProgression[i].includes(altKey))) {
+        stepIndex = i;
+        break;
+      }
+    }
+
+    if (currentIndex === -1) return 'upcoming';
     if (stepIndex < currentIndex) return 'completed';
     if (stepIndex === currentIndex) return 'current';
     return 'upcoming';
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-10">
-      
-      {/* Search Header */}
-      <div className="text-center space-y-4">
-        <span className="text-xs font-black uppercase tracking-widest text-vibe-accent">
-          Live Shipment Tracker
-        </span>
-        <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white">
-          Track Your Streetwear Drop
-        </h1>
-        <p className="max-w-xl mx-auto text-xs sm:text-sm text-zinc-400">
-          Enter your Vibe Seekers Order ID (e.g. <code>VS-261120-XXXX</code>) or Shiprocket AWB Tracking Number.
-        </p>
+    <div className="bg-[#080808] min-h-screen text-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-12">
+        
+        {/* Search Header */}
+        <div className="text-center space-y-4">
+          <span className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
+            ORDER LOGISTICS
+          </span>
+          <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white">
+            TRACK YOUR STREETWEAR DROP
+          </h1>
+          <p className="max-w-xl mx-auto text-xs sm:text-sm text-zinc-400 uppercase tracking-wider">
+            Enter your Vibe Seekers Order ID or courier tracking reference number.
+          </p>
 
-        {/* Search Input Box */}
-        <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto flex gap-2 pt-2">
-          <div className="relative flex-1">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="text"
-              required
-              placeholder="e.g. VS-261120-1001 or Delhivery AWB..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-11 pr-4 py-3.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-vibe-accent font-mono uppercase"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-8 py-3.5 bg-vibe-accent hover:bg-vibe-accentHover disabled:bg-zinc-800 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
-          >
-            {loading ? 'Searching...' : 'Track'}
-          </button>
-        </form>
-      </div>
-
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-3">
-          <AlertCircle size={18} className="shrink-0" />
-          <span>{error}</span>
+          {/* Search Form */}
+          <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto flex gap-2 pt-4">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <input
+                type="text"
+                required
+                placeholder="e.g. VS-261120-1001 or Order ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#121212] border border-zinc-800 pl-11 pr-4 py-3.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white font-mono uppercase"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-zinc-200 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'TRACKING...' : 'TRACK'}
+            </button>
+          </form>
         </div>
-      )}
 
-      {/* Tracking Results Card */}
-      {trackingData && (
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-8 animate-fadeIn">
-          
-          {/* Header with Order Status Badge */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-800 pb-6 gap-4">
-            <div>
-              <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">Order Reference</span>
-              <h2 className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
-                #{trackingData.order?.orderNumber}
-              </h2>
-              <p className="text-xs text-zinc-400 mt-1">
-                Placed on {new Date(trackingData.order?.createdAt).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
-              </p>
-            </div>
-
-            <div className="text-left sm:text-right">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold block mb-1">
-                Current Status
-              </span>
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-vibe-accent/20 text-vibe-accent border border-vibe-accent/30">
-                {trackingData.order?.orderStatus?.replace('_', ' ')}
-              </span>
-            </div>
+        {error && (
+          <div className="max-w-xl mx-auto p-4 bg-red-950/40 border border-red-800/80 text-red-300 text-xs flex items-center gap-3">
+            <AlertCircle size={18} className="shrink-0" />
+            <span>{error}</span>
           </div>
+        )}
 
-          {/* Stepper Progress Bar */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">Delivery Timeline</h3>
-            <div className="relative pl-6 sm:pl-0 sm:grid sm:grid-cols-5 gap-4">
-              {steps.map((st, i) => {
-                const status = getStepStatus(st.key, trackingData.order?.orderStatus);
-                const isCurrent = status === 'current';
-                const isCompleted = status === 'completed';
+        {/* Tracking Details Card */}
+        {trackingData && (
+          <div className="bg-[#121212] border border-zinc-800 p-6 sm:p-8 space-y-8 shadow-2xl">
+            {/* Order Header Meta */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
+              <div>
+                <span className="text-xs text-zinc-500 font-mono block">VIBE SEEKERS ORDER</span>
+                <h3 className="text-xl font-black text-white font-mono uppercase tracking-wider mt-0.5">
+                  #{trackingData.orderNumber || trackingData.id}
+                </h3>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Recipient: <strong className="text-white">{trackingData.shippingAddress?.fullName || 'Customer'}</strong>
+                </p>
+              </div>
 
-                return (
-                  <div key={st.key} className="relative mb-6 sm:mb-0">
-                    <div className="flex items-center gap-3 sm:flex-col sm:items-start">
+              <div className="text-left sm:text-right">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 block">CURRENT STATUS</span>
+                <span className={`inline-block mt-1 px-3 py-1 text-xs font-black uppercase tracking-wider ${
+                  trackingData.status === 'DELIVERED'
+                    ? 'bg-emerald-500 text-black'
+                    : trackingData.status === 'CANCELLED'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-white text-black'
+                }`}>
+                  {trackingData.status?.replace('_', ' ')}
+                </span>
+                {trackingData.awbCode && (
+                  <p className="text-xs text-zinc-400 font-mono mt-1">
+                    AWB: {trackingData.awbCode}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Stepper Progression */}
+            <div className="space-y-6">
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
+                SHIPMENT TIMELINE
+              </h4>
+
+              <div className="relative pl-6 sm:pl-8 border-l-2 border-zinc-800 space-y-8">
+                {steps.map((step, idx) => {
+                  const state = getStepStatus(step.key, step.altKey, trackingData.status);
+
+                  return (
+                    <div key={idx} className="relative">
+                      {/* Node Bullet */}
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all ${
-                          isCompleted
-                            ? 'bg-emerald-500 text-white'
-                            : isCurrent
-                            ? 'bg-vibe-accent text-white ring-4 ring-vibe-accent/20 animate-pulse'
-                            : 'bg-zinc-800 text-zinc-500'
+                        className={`absolute -left-[31px] sm:-left-[39px] top-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          state === 'completed'
+                            ? 'bg-emerald-500 border-emerald-500 text-black'
+                            : state === 'current'
+                            ? 'bg-white border-white text-black animate-pulse'
+                            : 'bg-black border-zinc-700 text-zinc-700'
                         }`}
                       >
-                        {isCompleted ? <CheckCircle2 size={16} /> : i + 1}
+                        {state === 'completed' && <CheckCircle2 size={12} />}
                       </div>
+
                       <div>
-                        <p className={`text-xs font-bold uppercase tracking-wide mt-1 ${isCurrent ? 'text-vibe-accent' : isCompleted ? 'text-white' : 'text-zinc-500'}`}>
-                          {st.label}
+                        <h5 className={`text-xs font-bold uppercase tracking-wider ${
+                          state === 'completed' || state === 'current' ? 'text-white' : 'text-zinc-600'
+                        }`}>
+                          {step.label}
+                        </h5>
+                        <p className={`text-xs mt-0.5 ${
+                          state === 'completed' || state === 'current' ? 'text-zinc-400' : 'text-zinc-600'
+                        }`}>
+                          {step.desc}
                         </p>
-                        <p className="text-[11px] text-zinc-500 mt-0.5">{st.desc}</p>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Shiprocket Courier Information */}
-          {trackingData.order?.shiprocketAwb && (
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-white">
-                  <Truck size={18} className="text-vibe-accent" />
-                  <span>Shiprocket Logistics Partner</span>
-                </div>
-                <span className="text-xs font-bold text-emerald-400 font-mono">
-                  AWB: {trackingData.order?.shiprocketAwb}
+            {/* Shipping Destination */}
+            {trackingData.shippingAddress && (
+              <div className="border-t border-zinc-800 pt-6">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 block mb-2">
+                  DELIVERY DESTINATION
                 </span>
+                <p className="text-xs text-zinc-300">
+                  {trackingData.shippingAddress.houseFlatNo}, {trackingData.shippingAddress.streetAddress}, {trackingData.shippingAddress.city}, {trackingData.shippingAddress.state} - {trackingData.shippingAddress.pincode}
+                </p>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div>
-                  <span className="text-zinc-500 block">Courier Name:</span>
-                  <span className="font-bold text-white">{trackingData.order?.courierName || 'Delhivery Express'}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">Shipment Status:</span>
-                  <span className="font-bold text-vibe-accent">
-                    {trackingData.liveTracking?.currentStatus || 'IN TRANSIT'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block">Destination Hub:</span>
-                  <span className="font-bold text-white">
-                    {trackingData.order?.shippingAddress?.city}, {trackingData.order?.shippingAddress?.pincode}
-                  </span>
-                </div>
-              </div>
-
-              {/* Scans timeline if available */}
-              {trackingData.liveTracking?.trackingScans?.length > 0 && (
-                <div className="border-t border-zinc-800/80 pt-3 space-y-2">
-                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">Live Courier Scans:</span>
-                  <div className="space-y-2 text-xs">
-                    {trackingData.liveTracking.trackingScans.map((scan, idx) => (
-                      <div key={idx} className="flex items-start gap-3 text-zinc-300">
-                        <span className="font-mono text-zinc-500 text-[11px] shrink-0">{scan.date}</span>
-                        <div>
-                          <p className="font-semibold text-white">{scan.activity}</p>
-                          <p className="text-[11px] text-zinc-500">{scan.location}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Ordered Items Summary */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">Items in this Drop</h3>
-            <div className="divide-y divide-zinc-800 border-y border-zinc-800">
-              {trackingData.order?.items?.map((it) => (
-                <div key={it.id} className="py-3 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    {it.imageUrl && (
-                      <img src={it.imageUrl} alt={it.productName} className="w-12 h-14 object-cover rounded bg-zinc-950" />
-                    )}
-                    <div>
-                      <p className="font-bold text-white">{it.productName}</p>
-                      <p className="text-zinc-500">Size: {it.size} • Qty: {it.quantity}</p>
-                    </div>
-                  </div>
-                  <span className="font-black text-white">₹{it.totalPrice?.toLocaleString('en-IN')}</span>
-                </div>
-              ))}
-            </div>
+            )}
           </div>
+        )}
 
-          {/* STRICT NO RETURN POLICY REMINDER (Explicitly no return button) */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3.5 text-amber-300 text-xs leading-relaxed">
-            <ShieldAlert size={20} className="shrink-0 text-amber-400 mt-0.5" />
-            <div>
-              <p className="font-bold text-amber-400 uppercase tracking-wide">
-                Store Policy Notice: No Returns or Exchanges
-              </p>
-              <p className="mt-0.5 text-zinc-300">
-                In accordance with VIBE SEEKERS store policies, return options are currently unavailable. For delivery damage inquiries or courier support, reach our team directly at <strong>vibeseekers09@gmail.com</strong> or via WhatsApp at <strong>+91 9860498749</strong>.
-              </p>
-            </div>
-          </div>
-
-        </div>
-      )}
-
+      </div>
     </div>
   );
 };

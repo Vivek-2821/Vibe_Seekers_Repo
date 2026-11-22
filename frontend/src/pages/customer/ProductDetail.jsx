@@ -1,41 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ShoppingBag, Zap, ShieldAlert, Ruler, Truck, Check, ChevronRight, Share2, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  ShoppingBag,
+  Zap,
+  ShieldAlert,
+  Ruler,
+  Truck,
+  Check,
+  ChevronRight,
+  Share2,
+  AlertCircle,
+  Heart,
+  Sparkles,
+  Info,
+} from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { SizeGuideModal } from '../../components/shop/SizeGuideModal';
 import { ProductCard } from '../../components/shop/ProductCard';
 
 export const ProductDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, openCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   const [product, setProduct] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('L');
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [added, setAdded] = useState(false);
+  const [validationError, setValidationError] = useState('');
   const [pincode, setPincode] = useState('');
   const [pincodeResult, setPincodeResult] = useState(null);
   const [checkingPincode, setCheckingPincode] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
+      setValidationError('');
       try {
         const res = await axiosInstance.get(`/api/public/products/${slug}`);
-        const data = res.data.data;
+        const data = res.data?.data || res.data;
         setProduct(data);
         setSelectedImageIndex(0);
 
-        // Fetch related products in the same category
+        // Pre-select size and color if available
+        if (data.sizeStocks && data.sizeStocks.length > 0) {
+          const inStock = data.sizeStocks.find((s) => s.stockQuantity > 0);
+          setSelectedSize(inStock ? inStock.size : data.sizeStocks[0].size);
+        } else {
+          setSelectedSize('L');
+        }
+
+        if (data.colors) {
+          const colList = data.colors.split(',').map((c) => c.trim()).filter(Boolean);
+          setSelectedColor(colList[0] || 'Classic Black');
+        } else {
+          setSelectedColor('Classic Black');
+        }
+
+        // Save to Recently Viewed in localStorage
+        try {
+          const recents = JSON.parse(localStorage.getItem('vibe_recent_views') || '[]');
+          const filtered = recents.filter((p) => p.id !== data.id);
+          const updated = [
+            {
+              id: data.id,
+              name: data.name,
+              slug: data.slug,
+              price: data.price,
+              mrp: data.mrp,
+              primaryImageUrl: data.primaryImageUrl || data.images?.[0]?.imageUrl,
+              category: data.category,
+              gsm: data.gsm,
+            },
+            ...filtered,
+          ].slice(0, 6);
+          localStorage.setItem('vibe_recent_views', JSON.stringify(updated));
+          setRecentlyViewed(filtered.slice(0, 4));
+        } catch (e) {
+          console.error(e);
+        }
+
+        // Fetch related products
         if (data.category) {
-          const relRes = await axiosInstance.get(`/api/public/categories/${data.category}`);
-          setRelatedProducts(relRes.data.data.filter((p) => p.id !== data.id).slice(0, 4));
+          try {
+            const relRes = await axiosInstance.get(`/api/public/categories/${data.category}`);
+            const relData = relRes.data?.data || relRes.data || [];
+            setRelatedProducts(relData.filter((p) => p.id !== data.id).slice(0, 4));
+          } catch {
+            // fallback
+          }
         }
       } catch (err) {
         console.error('Failed to load product details', err);
@@ -50,18 +113,18 @@ export const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-vibe-accent border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-[70vh] flex items-center justify-center bg-[#080808]">
+        <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="max-w-xl mx-auto py-24 text-center space-y-4">
-        <h2 className="text-2xl font-black text-white uppercase">Product Not Found</h2>
-        <p className="text-zinc-400 text-sm">The streetwear piece you're looking for does not exist or has dropped out of archive.</p>
-        <Link to="/shop" className="inline-block px-6 py-3 bg-vibe-accent text-white text-xs font-bold uppercase rounded-lg">
+      <div className="max-w-xl mx-auto py-24 text-center space-y-4 bg-[#080808] text-white">
+        <h2 className="text-2xl font-black uppercase tracking-wider">Product Not Found</h2>
+        <p className="text-zinc-400 text-xs">The streetwear piece you are looking for does not exist or has dropped out of vault.</p>
+        <Link to="/shop" className="inline-block px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-widest">
           Back to Shop
         </Link>
       </div>
@@ -72,14 +135,33 @@ export const ProductDetail = () => {
     ? product.images.map((img) => img.imageUrl)
     : [product.primaryImageUrl || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800'];
 
+  const colorOptions = product.colors
+    ? product.colors.split(',').map((c) => c.trim()).filter(Boolean)
+    : [];
+
   const handleAddToCart = () => {
-    addItem(product, selectedSize, quantity);
+    if (!selectedSize) {
+      setValidationError('Please select a garment size before adding to bag.');
+      return;
+    }
+    if (colorOptions.length > 0 && !selectedColor) {
+      setValidationError('Please select a color before adding to bag.');
+      return;
+    }
+
+    setValidationError('');
+    addItem(product, selectedSize, selectedColor, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
-    addItem(product, selectedSize, quantity);
+    if (!selectedSize) {
+      setValidationError('Please select a garment size.');
+      return;
+    }
+    setValidationError('');
+    addItem(product, selectedSize, selectedColor, quantity);
     navigate('/checkout');
   };
 
@@ -94,12 +176,12 @@ export const ProductDetail = () => {
       const res = await axiosInstance.get(`/api/public/pincode/check?pincode=${pincode}`);
       setPincodeResult({
         success: true,
-        message: `Express Streetwear Delivery available for PIN ${pincode} within 3-5 business days.`,
+        message: `Express Streetwear Delivery available for PIN ${pincode} within 3-5 business days via express courier.`,
       });
     } catch {
       setPincodeResult({
         success: true,
-        message: `Standard Express Delivery available for PIN ${pincode}.`,
+        message: `Express Courier Delivery confirmed for PIN ${pincode} (Standard 3-5 Business Days).`,
       });
     } finally {
       setCheckingPincode(false);
@@ -108,252 +190,361 @@ export const ProductDetail = () => {
 
   const discountPercent = product.discountPercent > 0
     ? product.discountPercent
-    : (product.mrp && product.mrp > product.price
-        ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+    : (product.mrp && Number(product.mrp) > Number(product.price)
+        ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
         : null);
 
-  const currentSizeStock = product.sizeStocks?.find((s) => s.size === selectedSize)?.stock ?? 10;
+  const isFavorited = isInWishlist(product.id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16">
+    <div className="bg-[#080808] min-h-screen text-white pb-24">
       
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-2 text-xs text-zinc-500 uppercase tracking-wider">
-        <Link to="/" className="hover:text-zinc-300">Home</Link>
-        <ChevronRight size={14} />
-        <Link to="/shop" className="hover:text-zinc-300">Shop</Link>
-        <ChevronRight size={14} />
-        <Link to={`/shop?category=${product.category}`} className="hover:text-zinc-300">
-          {product.category}
-        </Link>
-        <ChevronRight size={14} />
-        <span className="text-zinc-300 font-bold truncate max-w-[200px]">{product.name}</span>
-      </nav>
-
-      {/* Main Product Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
-        
-        {/* Left Column: Image Gallery with Zoom/Thumbnail Selector */}
-        <div className="space-y-4">
-          <div className="aspect-[4/5] bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden relative shadow-2xl">
-            <img
-              src={images[selectedImageIndex]}
-              alt={product.name}
-              className="w-full h-full object-cover object-center transition-all duration-300"
-            />
-            {product.newArrival && (
-              <span className="absolute top-4 left-4 bg-vibe-accent text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded shadow-lg">
-                Fresh Drop
-              </span>
-            )}
-          </div>
-
-          {/* Thumbnails list */}
-          {images.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {images.map((imgUrl, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedImageIndex(idx)}
-                  className={`w-20 aspect-square rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
-                    selectedImageIndex === idx
-                      ? 'border-vibe-accent scale-105'
-                      : 'border-zinc-800 opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img src={imgUrl} alt="Thumbnail" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
+      {/* Breadcrumb Bar */}
+      <div className="border-b border-zinc-800/80 bg-[#0d0d0d] py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-xs text-zinc-400 flex items-center gap-2 uppercase tracking-wider">
+          <Link to="/" className="hover:text-white">Home</Link>
+          <span>/</span>
+          <Link to="/shop" className="hover:text-white">Shop</Link>
+          <span>/</span>
+          <span className="text-zinc-200 truncate">{product.name}</span>
         </div>
+      </div>
 
-        {/* Right Column: Product Info & Purchase Actions */}
-        <div className="space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
           
-          <div>
-            <span className="text-xs font-black uppercase tracking-widest text-vibe-accent">
-              {product.category}
-            </span>
-            <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white mt-1">
-              {product.name}
-            </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-2 font-medium">
-              {product.fabricDetails}
-            </p>
-          </div>
-
-          {/* Pricing */}
-          <div className="flex items-baseline gap-3 border-y border-zinc-800/80 py-4">
-            <span className="text-3xl font-black text-white">
-              ₹{Number(product.price).toLocaleString('en-IN')}
-            </span>
-            {product.mrp && Number(product.mrp) > Number(product.price) && (
-              <>
-                <span className="text-base text-zinc-500 line-through">
-                  ₹{Number(product.mrp).toLocaleString('en-IN')}
-                </span>
-                <span className="px-2 py-0.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded">
-                  SAVE {discountPercent}%
-                </span>
-              </>
+          {/* Left Column: Image Gallery (7 cols) */}
+          <div className="lg:col-span-7 flex flex-col-reverse sm:flex-row gap-4">
+            
+            {/* Thumbnail Strip */}
+            {images.length > 1 && (
+              <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto sm:w-24 flex-shrink-0">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`aspect-[3/4] w-16 sm:w-full overflow-hidden border transition-all flex-shrink-0 bg-zinc-950 ${
+                      selectedImageIndex === idx ? 'border-white' : 'border-zinc-800 opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`${product.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
             )}
-            <span className="text-xs text-zinc-500 ml-auto font-medium">Inclusive of all taxes</span>
-          </div>
 
-          {/* Sizing Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-wider text-white">
-                Select Size:
-              </span>
+            {/* Main Stage Image with Zoom View */}
+            <div className="flex-1 relative aspect-[3/4] bg-zinc-950 border border-zinc-800 overflow-hidden group">
+              <img
+                src={images[selectedImageIndex] || images[0]}
+                alt={product.name}
+                className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 cursor-crosshair"
+              />
+
+              {/* Badges on Gallery */}
+              <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
+                {product.isBestSeller && (
+                  <span className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-2.5 py-1">
+                    BEST SELLER
+                  </span>
+                )}
+                {product.newArrival && (
+                  <span className="bg-black text-white border border-zinc-700 font-black text-[10px] uppercase tracking-widest px-2.5 py-1">
+                    NEW DROP
+                  </span>
+                )}
+                {discountPercent && (
+                  <span className="bg-emerald-500 text-black font-extrabold text-[10px] uppercase tracking-wider px-2.5 py-1">
+                    {discountPercent}% OFF
+                  </span>
+                )}
+              </div>
+
+              {/* Wishlist Button */}
               <button
-                type="button"
-                onClick={() => setSizeGuideOpen(true)}
-                className="text-xs font-bold text-vibe-accent hover:underline flex items-center gap-1"
+                onClick={() => toggleWishlist(product)}
+                className="absolute top-4 right-4 z-10 p-3 rounded-full bg-black/60 backdrop-blur-md border border-zinc-700 hover:scale-110 active:scale-95 transition-all text-white"
+                title={isFavorited ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
-                <Ruler size={14} /> Size Guide
+                <Heart size={18} className={isFavorited ? 'fill-red-500 text-red-500' : 'text-zinc-200'} />
               </button>
             </div>
 
-            <div className="grid grid-cols-5 gap-2.5">
-              {['S', 'M', 'L', 'XL', 'XXL'].map((sz) => {
-                const stock = product.sizeStocks?.find((s) => s.size === sz)?.stock ?? 5;
-                const isOutOfStock = stock <= 0;
-
-                return (
-                  <button
-                    key={sz}
-                    disabled={isOutOfStock}
-                    onClick={() => setSelectedSize(sz)}
-                    className={`py-3 rounded-lg text-xs font-black uppercase tracking-wider border transition-all flex flex-col items-center justify-center gap-1 ${
-                      selectedSize === sz
-                        ? 'bg-vibe-accent text-white border-vibe-accent shadow-lg shadow-vibe-accent/20'
-                        : isOutOfStock
-                        ? 'bg-zinc-950 text-zinc-600 border-zinc-900 cursor-not-allowed line-through'
-                        : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:border-zinc-600'
-                    }`}
-                  >
-                    <span>{sz}</span>
-                    <span className="text-[9px] font-normal opacity-80">
-                      {isOutOfStock ? 'Sold Out' : `${stock} left`}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
-          {/* CRITICAL STORE POLICY: NO RETURNS CURRENTLY AVAILABLE */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3.5 text-amber-300 text-xs leading-relaxed">
-            <AlertCircle size={20} className="shrink-0 text-amber-400 mt-0.5" />
+          {/* Right Column: Product Purchasing Suite (5 cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Category & Title */}
             <div>
-              <p className="font-bold text-amber-400 uppercase tracking-wide">
-                No Returns Policy In Effect
-              </p>
-              <p className="mt-0.5 text-zinc-300">
-                To guarantee brand freshness and limited drop exclusivity, return & exchange options are currently unavailable. Please verify sizing via our guide before ordering.
+              <span className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
+                {product.category || 'VIBE SEEKERS STREETWEAR'}
+              </span>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-white mt-1">
+                {product.name}
+              </h1>
+            </div>
+
+            {/* Price block */}
+            <div className="flex items-baseline gap-3 pb-4 border-b border-zinc-800">
+              <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
+                ₹{Number(product.price).toLocaleString('en-IN')}
+              </span>
+              {product.mrp && Number(product.mrp) > Number(product.price) && (
+                <span className="text-sm text-zinc-500 line-through">
+                  ₹{Number(product.mrp).toLocaleString('en-IN')}
+                </span>
+              )}
+              {discountPercent && (
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  Save {discountPercent}%
+                </span>
+              )}
+            </div>
+
+            {/* Color Selector */}
+            {colorOptions.length > 0 && (
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                    Color: <span className="text-white font-normal">{selectedColor}</span>
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {colorOptions.map((col) => (
+                    <button
+                      key={col}
+                      onClick={() => {
+                        setSelectedColor(col);
+                        setValidationError('');
+                      }}
+                      className={`px-3.5 py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
+                        selectedColor === col
+                          ? 'bg-white text-black border-white'
+                          : 'bg-[#121212] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                      }`}
+                    >
+                      {col}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Size Selector & Size Guide */}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                  Select Size (Oversized Drop-Shoulder):
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSizeGuideOpen(true)}
+                  className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white underline uppercase tracking-wider"
+                >
+                  <Ruler size={13} />
+                  <span>Size Guide</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-5 gap-2">
+                {['S', 'M', 'L', 'XL', 'XXL'].map((sz) => {
+                  const stockEntry = product.sizeStocks?.find((s) => s.size === sz);
+                  const isOutOfStock = stockEntry && stockEntry.stockQuantity <= 0;
+
+                  return (
+                    <button
+                      key={sz}
+                      disabled={isOutOfStock}
+                      onClick={() => {
+                        setSelectedSize(sz);
+                        setValidationError('');
+                      }}
+                      className={`py-3 text-xs font-extrabold uppercase tracking-wider border transition-all ${
+                        selectedSize === sz
+                          ? 'bg-white text-black border-white'
+                          : isOutOfStock
+                          ? 'bg-zinc-950 text-zinc-600 border-zinc-900 cursor-not-allowed line-through'
+                          : 'bg-[#121212] text-zinc-300 border-zinc-800 hover:border-zinc-500 hover:text-white'
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Stock Indicator */}
+              <p className="text-[11px] text-zinc-400 mt-2 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>In Stock • Ready to Dispatch via Express Logistics</span>
               </p>
             </div>
-          </div>
 
-          {/* Purchase CTA Buttons */}
-          <div className="space-y-3 pt-2">
-            <div className="flex gap-3">
+            {/* Quantity Selector */}
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">Quantity:</span>
+              <div className="flex items-center border border-zinc-700 bg-[#121212]">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-3 py-2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  -
+                </button>
+                <span className="px-4 text-xs font-bold text-white">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-3 py-2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Validation Error Message */}
+            {validationError && (
+              <div className="p-3 bg-red-950/40 border border-red-800/80 text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle size={15} />
+                <span>{validationError}</span>
+              </div>
+            )}
+
+            {/* Action Buttons: Add to Bag & Buy Now */}
+            <div className="space-y-2.5 pt-2">
               <button
                 onClick={handleAddToCart}
-                className={`flex-1 py-4 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-                  added
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white'
-                }`}
+                className="w-full py-4 bg-white text-black font-extrabold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors shadow-2xl"
               >
                 {added ? (
                   <>
-                    <Check size={18} /> Added To Bag ({selectedSize})
+                    <Check size={16} />
+                    <span>ADDED TO YOUR BAG</span>
                   </>
                 ) : (
                   <>
-                    <ShoppingBag size={18} /> Add To Bag
+                    <ShoppingBag size={16} />
+                    <span>ADD TO BAG</span>
                   </>
                 )}
               </button>
 
               <button
                 onClick={handleBuyNow}
-                className="flex-1 py-4 bg-vibe-accent hover:bg-vibe-accentHover text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-vibe-accent/20 hover:scale-[1.02]"
+                className="w-full py-4 bg-[#141414] hover:bg-zinc-900 border border-zinc-700 text-white font-extrabold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-colors"
               >
-                <Zap size={18} /> Buy Now (Prepaid)
+                <Zap size={16} />
+                <span>BUY NOW (INSTANT PREPAID CHECKOUT)</span>
               </button>
             </div>
-          </div>
 
-          {/* Pincode Courier Check */}
-          <div className="border border-zinc-800 rounded-xl p-4 bg-zinc-900/40 space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-              <Truck size={16} className="text-vibe-accent" /> Check Pan-India Delivery
-            </span>
-            <form onSubmit={handlePincodeCheck} className="flex gap-2">
-              <input
-                type="text"
-                maxLength={6}
-                placeholder="Enter 6-digit Indian Pincode"
-                value={pincode}
-                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                className="bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-white placeholder-zinc-500 flex-1 focus:outline-none focus:border-vibe-accent"
-              />
-              <button
-                type="submit"
-                disabled={checkingPincode}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-lg transition-colors"
-              >
-                {checkingPincode ? 'Checking...' : 'Check'}
-              </button>
-            </form>
-            {pincodeResult && (
-              <p className={`text-xs ${pincodeResult.success ? 'text-emerald-400' : 'text-red-400'}`}>
-                {pincodeResult.message}
-              </p>
-            )}
-          </div>
-
-          {/* Product Description */}
-          <div className="space-y-3 border-t border-zinc-800 pt-6">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">Description & Specs</h3>
-            <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed whitespace-pre-line space-y-2">
-              {product.description}
+            {/* Indian Pincode Delivery Check */}
+            <div className="p-4 bg-[#111111] border border-zinc-800 space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                <Truck size={14} />
+                <span>Check Delivery Pincode</span>
+              </span>
+              <form onSubmit={handlePincodeCheck} className="flex gap-2">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value)}
+                  placeholder="Enter 6-digit PIN code"
+                  className="flex-1 bg-black border border-zinc-800 text-white px-3 py-2 text-xs tracking-widest outline-none focus:border-zinc-500"
+                />
+                <button
+                  type="submit"
+                  disabled={checkingPincode}
+                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs font-bold uppercase tracking-wider text-white transition-colors"
+                >
+                  {checkingPincode ? 'Checking...' : 'Check'}
+                </button>
+              </form>
+              {pincodeResult && (
+                <p className={`text-xs mt-1 ${pincodeResult.success ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {pincodeResult.message}
+                </p>
+              )}
             </div>
+
+            {/* Garment Technical Specs Accordion / List */}
+            <div className="border-t border-zinc-800 pt-6 space-y-4 text-xs text-zinc-400 leading-relaxed">
+              <div>
+                <h4 className="font-bold text-white uppercase tracking-wider mb-1">
+                  PRODUCT DESCRIPTION & FIT
+                </h4>
+                <p>{product.description || 'Authentic oversized streetwear cut designed with drop-shoulders and boxy proportions. Engineered for unisex comfort and statement fashion.'}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-3 border-y border-zinc-800/80">
+                <div>
+                  <span className="font-bold text-white uppercase tracking-wider block">FABRIC DETAILS</span>
+                  <span className="text-zinc-400">{product.fabricDetails || '100% Combed Heavy Cotton'}</span>
+                </div>
+                <div>
+                  <span className="font-bold text-white uppercase tracking-wider block">FABRIC DENSITY</span>
+                  <span className="text-zinc-400">{product.gsm || '240 GSM Luxury Terry'}</span>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-white uppercase tracking-wider mb-1">
+                  WASHING & CARE INSTRUCTIONS
+                </h4>
+                <p className="text-zinc-400">
+                  {product.washingInstructions || 'Machine wash cold inside-out with like colors. Do not iron directly on graphics. Flat dry in shade to preserve color intensity.'}
+                </p>
+              </div>
+
+              {/* Strict No Returns Notice */}
+              <div className="p-3 bg-zinc-950 border border-zinc-800 flex items-start gap-2.5">
+                <ShieldAlert size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                <div className="text-[11px] leading-relaxed">
+                  <span className="font-bold text-zinc-200 uppercase">Prepaid & Return Policy Notice: </span>
+                  <span className="text-zinc-400">
+                    To maintain strict hygiene standards and limited streetwear drop exclusivity, returns are not applicable. Please consult the size guide before checkout.
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
         </div>
+
+        {/* Related Drops Section */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-24 pt-12 border-t border-zinc-800">
+            <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white mb-8">
+              COMPLETE THE VIBE (RELATED DROPS)
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {relatedProducts.map((rel) => (
+                <ProductCard key={rel.id} product={rel} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recently Viewed Products */}
+        {recentlyViewed.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-zinc-800">
+            <h3 className="text-lg sm:text-xl font-black uppercase tracking-tight text-white mb-6">
+              RECENTLY VIEWED
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {recentlyViewed.map((viewed) => (
+                <ProductCard key={viewed.id} product={viewed} />
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
 
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <div className="border-t border-zinc-800 pt-12 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
-              Complete Your Streetwear Fit
-            </h3>
-            <Link to="/shop" className="text-xs font-bold text-vibe-accent uppercase tracking-wider hover:underline">
-              View All
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {relatedProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Size Guide Modal */}
-      <SizeGuideModal
-        isOpen={sizeGuideOpen}
-        onClose={() => setSizeGuideOpen(false)}
-        category={product.category}
-      />
+      <SizeGuideModal isOpen={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
 
     </div>
   );
