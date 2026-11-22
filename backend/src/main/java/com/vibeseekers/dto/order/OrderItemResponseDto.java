@@ -1,7 +1,9 @@
 package com.vibeseekers.dto.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderItemResponseDto {
 
     private Long id;

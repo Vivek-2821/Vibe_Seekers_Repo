@@ -76,12 +76,12 @@ export const ProductCard = ({ product }) => {
 
         {/* Badges: New Arrival / Best Seller / Discount */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
-          {product.isBestSeller && (
+          {(product.bestSeller ?? product.isBestSeller) && (
             <span className="bg-white text-black text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
               BEST SELLER
             </span>
           )}
-          {product.newArrival && (
+          {(product.newArrival ?? product.isNewArrival) && (
             <span className="bg-black/90 text-white border border-zinc-700 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
               NEW DROP
             </span>

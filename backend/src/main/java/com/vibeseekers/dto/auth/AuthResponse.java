@@ -1,7 +1,10 @@
 package com.vibeseekers.dto.auth;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vibeseekers.entity.Role;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AuthResponse {
 
     private String accessToken;
@@ -12,6 +15,8 @@ public class AuthResponse {
     private String fullName;
     private String phone;
     private Role role;
+
+    @JsonProperty("verified")
     private boolean isVerified;
 
     public AuthResponse() {
@@ -93,7 +98,13 @@ public class AuthResponse {
         this.role = role;
     }
 
+    @JsonProperty("verified")
     public boolean isVerified() {
+        return isVerified;
+    }
+
+    @JsonProperty("isVerified")
+    public boolean getIsVerified() {
         return isVerified;
     }
 

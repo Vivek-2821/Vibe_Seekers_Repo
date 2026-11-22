@@ -1,8 +1,10 @@
 package com.vibeseekers.dto.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentProofRequest {
 
     @NotBlank(message = "12-digit UPI UTR / Transaction ID is required")

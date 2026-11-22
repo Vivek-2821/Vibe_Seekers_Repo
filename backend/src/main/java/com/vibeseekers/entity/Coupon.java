@@ -1,11 +1,16 @@
 package com.vibeseekers.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "coupons")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Coupon {
 
     @Id
@@ -92,11 +97,23 @@ public class Coupon {
         this.expiryDate = expiryDate;
     }
 
+    @JsonProperty("active")
     public boolean isActive() {
         return isActive;
     }
 
+    @JsonProperty("isActive")
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    @JsonSetter
+    @JsonAlias({"isActive", "active"})
     public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public void setIsActive(boolean active) {
         isActive = active;
     }
 

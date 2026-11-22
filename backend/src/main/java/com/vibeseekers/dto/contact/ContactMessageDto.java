@@ -1,9 +1,14 @@
 package com.vibeseekers.dto.contact;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ContactMessageDto {
 
     private Long id;
@@ -23,7 +28,10 @@ public class ContactMessageDto {
     @NotBlank(message = "Message is required")
     private String message;
 
+    @JsonProperty("read")
+    @JsonAlias({"isRead", "read"})
     private boolean isRead;
+
     private LocalDateTime createdAt;
 
     public ContactMessageDto() {
@@ -77,11 +85,23 @@ public class ContactMessageDto {
         this.message = message;
     }
 
+    @JsonProperty("read")
     public boolean isRead() {
         return isRead;
     }
 
+    @JsonProperty("isRead")
+    public boolean getIsRead() {
+        return isRead;
+    }
+
+    @JsonSetter
+    @JsonAlias({"isRead", "read"})
     public void setRead(boolean read) {
+        isRead = read;
+    }
+
+    public void setIsRead(boolean read) {
         isRead = read;
     }
 

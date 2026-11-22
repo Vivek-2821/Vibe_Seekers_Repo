@@ -1,8 +1,10 @@
 package com.vibeseekers.dto.shiprocket;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ShiprocketTrackingDto {
 
     private String awb;
@@ -13,6 +15,7 @@ public class ShiprocketTrackingDto {
     private String expectedDeliveryDate;
     private List<TrackingScan> trackingScans = new ArrayList<>();
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class TrackingScan {
         private String date;
         private String activity;

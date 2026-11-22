@@ -1,5 +1,6 @@
 package com.vibeseekers.dto.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vibeseekers.entity.OrderStatus;
 import com.vibeseekers.entity.PaymentMethod;
 import com.vibeseekers.entity.PaymentStatus;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderResponseDto {
 
     private Long id;

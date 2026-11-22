@@ -1,11 +1,21 @@
 package com.vibeseekers.dto.product;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductImageDto {
 
     private Long id;
     private String imageUrl;
     private String publicId;
+
+    @JsonProperty("primary")
+    @JsonAlias({"isPrimary", "primary"})
     private boolean isPrimary;
+
     private Integer displayOrder;
 
     public ProductImageDto() {
@@ -43,11 +53,23 @@ public class ProductImageDto {
         this.publicId = publicId;
     }
 
+    @JsonProperty("primary")
     public boolean isPrimary() {
         return isPrimary;
     }
 
+    @JsonProperty("isPrimary")
+    public boolean getIsPrimary() {
+        return isPrimary;
+    }
+
+    @JsonSetter
+    @JsonAlias({"isPrimary", "primary"})
     public void setPrimary(boolean primary) {
+        isPrimary = primary;
+    }
+
+    public void setIsPrimary(boolean primary) {
         isPrimary = primary;
     }
 

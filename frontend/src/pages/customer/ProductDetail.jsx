@@ -243,12 +243,12 @@ export const ProductDetail = () => {
 
               {/* Badges on Gallery */}
               <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
-                {product.isBestSeller && (
+                {(product.bestSeller ?? product.isBestSeller) && (
                   <span className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-2.5 py-1">
                     BEST SELLER
                   </span>
                 )}
-                {product.newArrival && (
+                {(product.newArrival ?? product.isNewArrival) && (
                   <span className="bg-black text-white border border-zinc-700 font-black text-[10px] uppercase tracking-widest px-2.5 py-1">
                     NEW DROP
                   </span>

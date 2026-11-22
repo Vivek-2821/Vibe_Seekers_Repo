@@ -1,10 +1,12 @@
 package com.vibeseekers.dto.auth;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResetPasswordRequest {
 
     @NotBlank(message = "Email is required")

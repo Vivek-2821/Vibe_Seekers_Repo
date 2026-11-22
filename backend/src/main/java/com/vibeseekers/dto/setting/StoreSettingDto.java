@@ -1,7 +1,9 @@
 package com.vibeseekers.dto.setting;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StoreSettingDto {
 
     @NotBlank(message = "Setting key is required")

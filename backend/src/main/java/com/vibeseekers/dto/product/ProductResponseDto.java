@@ -1,11 +1,14 @@
 package com.vibeseekers.dto.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vibeseekers.entity.ProductCategory;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductResponseDto {
 
     private Long id;
@@ -105,7 +108,13 @@ public class ProductResponseDto {
         this.fabricDetails = fabricDetails;
     }
 
+    @JsonProperty("newArrival")
     public boolean isNewArrival() {
+        return isNewArrival;
+    }
+
+    @JsonProperty("isNewArrival")
+    public boolean getIsNewArrival() {
         return isNewArrival;
     }
 
@@ -113,7 +122,13 @@ public class ProductResponseDto {
         isNewArrival = newArrival;
     }
 
+    @JsonProperty("bestSeller")
     public boolean isBestSeller() {
+        return isBestSeller;
+    }
+
+    @JsonProperty("isBestSeller")
+    public boolean getIsBestSeller() {
         return isBestSeller;
     }
 
@@ -153,7 +168,13 @@ public class ProductResponseDto {
         this.collectionName = collectionName;
     }
 
+    @JsonProperty("active")
     public boolean isActive() {
+        return isActive;
+    }
+
+    @JsonProperty("isActive")
+    public boolean getIsActive() {
         return isActive;
     }
 

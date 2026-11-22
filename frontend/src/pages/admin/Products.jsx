@@ -44,6 +44,7 @@ export const Products = () => {
     washingInstructions: '',
     collectionName: '',
     newArrival: false,
+    bestSeller: false,
     isBestSeller: false,
     active: true,
   });
@@ -93,6 +94,7 @@ export const Products = () => {
       washingInstructions: 'Machine wash cold inside-out with like colors. Do not iron directly on print.',
       collectionName: '',
       newArrival: true,
+      bestSeller: false,
       isBestSeller: false,
       active: true,
     });
@@ -122,9 +124,10 @@ export const Products = () => {
       gsm: product.gsm || '',
       washingInstructions: product.washingInstructions || '',
       collectionName: product.collectionName || '',
-      newArrival: product.newArrival,
-      isBestSeller: !!product.isBestSeller,
-      active: product.active,
+      newArrival: product.newArrival ?? product.isNewArrival ?? false,
+      bestSeller: product.bestSeller ?? product.isBestSeller ?? false,
+      isBestSeller: product.bestSeller ?? product.isBestSeller ?? false,
+      active: product.active ?? product.isActive ?? true,
     });
 
     const stockMap = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
@@ -283,9 +286,12 @@ export const Products = () => {
         gsm: formData.gsm,
         washingInstructions: formData.washingInstructions,
         collectionName: formData.collectionName,
-        newArrival: formData.newArrival,
-        isBestSeller: formData.isBestSeller,
-        active: formData.active,
+        newArrival: formData.newArrival ?? formData.isNewArrival ?? false,
+        isNewArrival: formData.newArrival ?? formData.isNewArrival ?? false,
+        bestSeller: formData.bestSeller ?? formData.isBestSeller ?? false,
+        isBestSeller: formData.bestSeller ?? formData.isBestSeller ?? false,
+        active: formData.active ?? formData.isActive ?? true,
+        isActive: formData.active ?? formData.isActive ?? true,
         sizeStocks: sizeStockArray,
         existingImages: existingImages.map((img, idx) => ({
           id: img.id,
@@ -483,15 +489,20 @@ export const Products = () => {
                       <div className="flex flex-col gap-1">
                         <span
                           className={`inline-flex items-center gap-1 text-[11px] font-bold ${
-                            p.active ? 'text-emerald-400' : 'text-zinc-500'
+                            (p.active ?? p.isActive ?? true) ? 'text-emerald-400' : 'text-zinc-500'
                           }`}
                         >
-                          {p.active ? <Eye size={12} /> : <EyeOff size={12} />}
-                          {p.active ? 'Active' : 'Hidden'}
+                          {(p.active ?? p.isActive ?? true) ? <Eye size={12} /> : <EyeOff size={12} />}
+                          {(p.active ?? p.isActive ?? true) ? 'Active' : 'Hidden'}
                         </span>
-                        {p.newArrival && (
+                        {(p.newArrival ?? p.isNewArrival) && (
                           <span className="text-[10px] text-vibe-accent font-bold uppercase tracking-wider">
                             ★ Fresh Drop
+                          </span>
+                        )}
+                        {(p.bestSeller ?? p.isBestSeller) && (
+                          <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
+                            ★ Best Seller
                           </span>
                         )}
                       </div>
@@ -894,8 +905,8 @@ export const Products = () => {
                 <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">
                   <input
                     type="checkbox"
-                    checked={formData.newArrival}
-                    onChange={(e) => setFormData({ ...formData, newArrival: e.target.checked })}
+                    checked={formData.newArrival ?? formData.isNewArrival ?? false}
+                    onChange={(e) => setFormData({ ...formData, newArrival: e.target.checked, isNewArrival: e.target.checked })}
                     className="h-4 w-4 rounded border-zinc-700 text-vibe-accent focus:ring-vibe-accent"
                   />
                   <span>Mark as Fresh Drop (New Arrival)</span>
@@ -904,8 +915,8 @@ export const Products = () => {
                 <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">
                   <input
                     type="checkbox"
-                    checked={formData.isBestSeller}
-                    onChange={(e) => setFormData({ ...formData, isBestSeller: e.target.checked })}
+                    checked={formData.bestSeller ?? formData.isBestSeller ?? false}
+                    onChange={(e) => setFormData({ ...formData, bestSeller: e.target.checked, isBestSeller: e.target.checked })}
                     className="h-4 w-4 rounded border-zinc-700 text-vibe-accent focus:ring-vibe-accent"
                   />
                   <span>Mark as Best Seller</span>
@@ -914,8 +925,8 @@ export const Products = () => {
                 <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">
                   <input
                     type="checkbox"
-                    checked={formData.active}
-                    onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                    checked={formData.active ?? formData.isActive ?? true}
+                    onChange={(e) => setFormData({ ...formData, active: e.target.checked, isActive: e.target.checked })}
                     className="h-4 w-4 rounded border-zinc-700 text-vibe-accent focus:ring-vibe-accent"
                   />
                   <span>Product is Active & Visible in Storefront</span>
