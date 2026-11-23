@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X, SlidersHorizontal, ArrowUpDown, Check, RefreshCw } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { ProductCard } from '../../components/shop/ProductCard';
+import { smartProductSearch } from '../../utils/searchUtils';
 
 export const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,6 +27,7 @@ export const Shop = () => {
   const categories = [
     { label: 'All Streetwear', value: '' },
     { label: 'Oversized T-Shirts', value: 'TSHIRTS' },
+    { label: 'Customize T-Shirts', value: 'CUSTOMIZE_TSHIRTS' },
     { label: 'Fleece Hoodies', value: 'HOODIES' },
     { label: 'Urban Jackets', value: 'JACKETS' },
   ];
@@ -53,10 +55,26 @@ export const Shop = () => {
 
         const res = await axiosInstance.get('/api/public/products', { params });
         const data = res.data?.data || res.data || {};
-        setProducts(data.content || []);
-        setTotalElements(data.totalElements || (data.content ? data.content.length : 0));
+        let content = Array.isArray(data) ? data : (Array.isArray(data.content) ? data.content : []);
+
+        // Fallback: If keyword search produced 0 direct SQL results, apply smart similar-word matching on all catalog items
+        if (searchQuery && content.length === 0) {
+          try {
+            const allRes = await axiosInstance.get('/api/public/products?pageSize=100');
+            const allData = allRes.data?.data || allRes.data || {};
+            const allItems = Array.isArray(allData) ? allData : (Array.isArray(allData.content) ? allData.content : []);
+            content = smartProductSearch(allItems, searchQuery);
+          } catch (e) {
+            console.warn('Smart product search fallback failed', e);
+          }
+        }
+
+        setProducts(content);
+        setTotalElements(content.length);
       } catch (err) {
         console.error('Failed to load shop products', err);
+        setProducts([]);
+        setTotalElements(0);
       } finally {
         setLoading(false);
       }
@@ -92,7 +110,7 @@ export const Shop = () => {
   return (
     <div className="bg-[#080808] min-h-screen text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        
+
         {/* Header & Page Title */}
         <div className="border-b border-zinc-800 pb-8 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -105,13 +123,13 @@ export const Shop = () => {
               {selectedCategory
                 ? categories.find((c) => c.value === selectedCategory)?.label
                 : filterType === 'new'
-                ? 'NEW ARRIVALS'
-                : filterType === 'bestseller'
-                ? 'BEST SELLERS'
-                : 'STREETWEAR COLLECTION'}
+                  ? 'NEW ARRIVALS'
+                  : filterType === 'bestseller'
+                    ? 'BEST SELLERS'
+                    : 'STREETWEAR COLLECTION'}
             </h1>
             <p className="text-xs text-zinc-400 mt-2 uppercase tracking-wider">
-              Showing {products.length} {products.length === 1 ? 'garment' : 'garments'} • Free express courier delivery pan-India
+              Showing {(products || []).length} {(products || []).length === 1 ? 'garment' : 'garments'} • Free express courier delivery pan-India
             </p>
           </div>
 
@@ -189,7 +207,7 @@ export const Shop = () => {
 
         {/* Main Layout: Sidebar Filters + Products Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
+
           {/* Desktop Filters Sidebar */}
           <aside className="hidden lg:block space-y-8 pr-6 border-r border-zinc-800/80">
             {/* Category Filter */}
@@ -202,11 +220,10 @@ export const Shop = () => {
                   <button
                     key={cat.value}
                     onClick={() => updateFilter('category', cat.value)}
-                    className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
-                      selectedCategory === cat.value
-                        ? 'bg-white text-black font-bold'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                    }`}
+                    className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${selectedCategory === cat.value
+                      ? 'bg-white text-black font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                      }`}
                   >
                     <span>{cat.label}</span>
                     {selectedCategory === cat.value && <Check size={14} />}
@@ -223,18 +240,16 @@ export const Shop = () => {
               <div className="space-y-1.5">
                 <button
                   onClick={() => updateFilter('filter', filterType === 'new' ? '' : 'new')}
-                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
-                    filterType === 'new' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                  }`}
+                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${filterType === 'new' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    }`}
                 >
                   <span>New Drops Only</span>
                   {filterType === 'new' && <Check size={14} />}
                 </button>
                 <button
                   onClick={() => updateFilter('filter', filterType === 'bestseller' ? '' : 'bestseller')}
-                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
-                    filterType === 'bestseller' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                  }`}
+                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${filterType === 'bestseller' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    }`}
                 >
                   <span>Best Sellers Only</span>
                   {filterType === 'bestseller' && <Check size={14} />}
@@ -252,11 +267,10 @@ export const Shop = () => {
                   <button
                     key={sz}
                     onClick={() => updateFilter('size', selectedSize === sz ? '' : sz)}
-                    className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
-                      selectedSize === sz
-                        ? 'bg-white text-black border-white'
-                        : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
-                    }`}
+                    className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${selectedSize === sz
+                      ? 'bg-white text-black border-white'
+                      : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                      }`}
                   >
                     {sz}
                   </button>
@@ -274,11 +288,10 @@ export const Shop = () => {
                   <button
                     key={col}
                     onClick={() => updateFilter('color', selectedColor === col ? '' : col)}
-                    className={`px-3 py-1.5 text-xs font-medium uppercase tracking-wider border transition-colors ${
-                      selectedColor === col
-                        ? 'bg-white text-black border-white font-bold'
-                        : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 text-xs font-medium uppercase tracking-wider border transition-colors ${selectedColor === col
+                      ? 'bg-white text-black border-white font-bold'
+                      : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                      }`}
                   >
                     {col}
                   </button>
@@ -341,9 +354,9 @@ export const Shop = () => {
                   <div key={i} className="aspect-[3/4] bg-zinc-900 animate-pulse border border-zinc-800" />
                 ))}
               </div>
-            ) : products.length > 0 ? (
+            ) : (products || []).length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                {products.map((product) => (
+                {(products || []).map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

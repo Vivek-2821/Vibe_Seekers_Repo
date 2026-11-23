@@ -455,6 +455,35 @@ export const Orders = () => {
                       <div>
                         <p className="font-bold text-white">{item.productName}</p>
                         <p className="text-zinc-500">Size: {item.size} {item.color ? `• Color: ${item.color}` : ''} • Qty: {item.quantity}</p>
+                        {(item.customizationPlacement || item.customText || item.customDesignUrl) && (
+                          <div className="mt-1.5 p-2 bg-zinc-950 border border-zinc-800 rounded text-[11px] space-y-0.5">
+                            <span className="text-vibe-accent font-bold uppercase text-[9px] tracking-wider block">
+                              Custom Personalization:
+                            </span>
+                            {item.customizationPlacement && (
+                              <p className="text-zinc-300">
+                                Placement: <strong className="text-white">{item.customizationPlacement}</strong>
+                              </p>
+                            )}
+                            {item.customText && (
+                              <p className="text-zinc-300">
+                                Text: <strong className="text-white font-mono">"{item.customText}"</strong>
+                              </p>
+                            )}
+                            {item.customDesignUrl && (
+                              <p className="pt-0.5">
+                                <a
+                                  href={item.customDesignUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-vibe-accent hover:underline font-bold inline-flex items-center gap-1"
+                                >
+                                  View Custom Artwork ↗
+                                </a>
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <span className="font-black text-white">₹{item.totalPrice?.toLocaleString('en-IN')}</span>

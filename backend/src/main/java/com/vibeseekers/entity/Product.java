@@ -57,6 +57,9 @@ public class Product {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Column(nullable = false)
+    private boolean isCustomizable = false;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ProductImage> images = new ArrayList<>();
@@ -218,6 +221,14 @@ public class Product {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public boolean isCustomizable() {
+        return isCustomizable || category == ProductCategory.CUSTOMIZE_TSHIRTS;
+    }
+
+    public void setCustomizable(boolean customizable) {
+        isCustomizable = customizable;
     }
 
     public List<ProductImage> getImages() {

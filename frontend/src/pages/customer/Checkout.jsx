@@ -130,6 +130,9 @@ export const Checkout = () => {
           size: String(item.size).toUpperCase(),
           color: item.color ? String(item.color).trim() : '',
           quantity: Number(item.quantity) || 1,
+          customizationPlacement: item.customizationPlacement || null,
+          customText: item.customText || null,
+          customDesignUrl: item.customDesignUrl || null,
         })),
         shippingAddress: cleanAddress,
         paymentMethod: 'UPI_MANUAL',
@@ -564,6 +567,11 @@ export const Checkout = () => {
                           <p className="text-[11px] text-zinc-400">
                             Size: {item.size} {item.color ? `• ${item.color}` : ''} • Qty: {item.quantity}
                           </p>
+                          {(item.customizationPlacement || item.customText) && (
+                            <p className="text-[10px] text-vibe-accent font-medium">
+                              Custom: {item.customizationPlacement || 'Print'} {item.customText ? `("${item.customText}")` : ''}
+                            </p>
+                          )}
                         </div>
                         <span className="text-xs font-bold text-zinc-300">
                           ₹{(item.price * item.quantity).toLocaleString('en-IN')}
@@ -588,7 +596,11 @@ export const Checkout = () => {
                 )}
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span className="text-emerald-400 uppercase font-bold">FREE EXPRESS</span>
+                  {shippingEstimate > 0 ? (
+                    <span className="font-bold text-white">₹{shippingEstimate.toLocaleString('en-IN')}</span>
+                  ) : (
+                    <span className="text-emerald-400 uppercase font-bold">FREE (₹0)</span>
+                  )}
                 </div>
                 <div className="border-t border-zinc-800 pt-2 flex justify-between text-sm font-extrabold text-white">
                   <span>FINAL PAYABLE AMOUNT</span>

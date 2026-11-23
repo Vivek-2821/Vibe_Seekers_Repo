@@ -36,7 +36,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "AND (:color IS NULL OR LOWER(p.colors) LIKE LOWER(CONCAT('%', :color, '%'))) " +
            "AND (:bestSellerOnly IS NULL OR :bestSellerOnly = false OR p.isBestSeller = true) " +
            "AND (:newArrivalOnly IS NULL OR :newArrivalOnly = false OR p.isNewArrival = true) " +
-           "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.colors) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.colors) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.fabricDetails) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.collectionName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.gsm) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Product> findWithFilters(@Param("activeOnly") boolean activeOnly,
                                  @Param("category") ProductCategory category,
                                  @Param("minPrice") BigDecimal minPrice,

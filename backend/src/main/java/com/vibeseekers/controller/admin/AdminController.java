@@ -6,6 +6,7 @@ import com.vibeseekers.dto.order.OrderResponseDto;
 import com.vibeseekers.dto.order.PaymentVerificationRequest;
 import com.vibeseekers.dto.product.ProductRequestDto;
 import com.vibeseekers.dto.product.ProductResponseDto;
+import com.vibeseekers.dto.setting.ShippingSettingsDto;
 import com.vibeseekers.dto.setting.StoreSettingDto;
 import com.vibeseekers.entity.*;
 import com.vibeseekers.repository.*;
@@ -198,6 +199,17 @@ public class AdminController {
     public ResponseEntity<ApiResponse<String>> updateSetting(@Valid @RequestBody StoreSettingDto dto) {
         storeSettingService.setSetting(dto.getSettingKey(), dto.getSettingValue(), dto.getDescription());
         return ResponseEntity.ok(ApiResponse.ok("Setting updated successfully", null));
+    }
+
+    @GetMapping("/settings/shipping")
+    public ResponseEntity<ApiResponse<ShippingSettingsDto>> getShippingSettings() {
+        return ResponseEntity.ok(ApiResponse.ok(storeSettingService.getShippingSettings()));
+    }
+
+    @PutMapping("/settings/shipping")
+    public ResponseEntity<ApiResponse<ShippingSettingsDto>> updateShippingSettings(@RequestBody ShippingSettingsDto dto) {
+        ShippingSettingsDto updated = storeSettingService.updateShippingSettings(dto);
+        return ResponseEntity.ok(ApiResponse.ok("Shipping settings updated successfully", updated));
     }
 
     // ==================== CONTACT INQUIRIES ====================

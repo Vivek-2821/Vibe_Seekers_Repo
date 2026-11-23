@@ -98,6 +98,7 @@ export const Products = () => {
       bestSeller: false,
       isBestSeller: false,
       active: true,
+      customizable: false,
     });
     setSizeStocks({ S: 10, M: 20, L: 25, XL: 15, XXL: 8 });
     setExistingImages([]);
@@ -129,6 +130,7 @@ export const Products = () => {
       bestSeller: product.bestSeller ?? product.isBestSeller ?? false,
       isBestSeller: product.bestSeller ?? product.isBestSeller ?? false,
       active: product.active ?? product.isActive ?? true,
+      customizable: product.customizable ?? product.isCustomizable ?? (product.category === 'CUSTOMIZE_TSHIRTS'),
     });
 
     const stockMap = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
@@ -293,6 +295,7 @@ export const Products = () => {
         isBestSeller: formData.bestSeller ?? formData.isBestSeller ?? false,
         active: formData.active ?? formData.isActive ?? true,
         isActive: formData.active ?? formData.isActive ?? true,
+        customizable: (formData.customizable || formData.category === 'CUSTOMIZE_TSHIRTS') ?? false,
         sizeStocks: sizeStockArray,
         existingImages: existingImages.map((img, idx) => ({
           id: img.id,
@@ -403,8 +406,8 @@ export const Products = () => {
           />
         </div>
 
-        <div className="flex gap-2">
-          {['', 'TSHIRTS', 'HOODIES', 'JACKETS'].map((cat) => (
+        <div className="flex flex-wrap gap-2">
+          {['', 'TSHIRTS', 'CUSTOMIZE_TSHIRTS', 'HOODIES', 'JACKETS'].map((cat) => (
             <button
               key={cat}
               onClick={() => setFilterCategory(cat)}
@@ -414,7 +417,7 @@ export const Products = () => {
                   : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
               }`}
             >
-              {cat || 'All'}
+              {cat === '' ? 'All' : cat === 'CUSTOMIZE_TSHIRTS' ? 'Customize Tees' : cat}
             </button>
           ))}
         </div>
@@ -598,6 +601,7 @@ export const Products = () => {
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
                   >
                     <option value="TSHIRTS">T-Shirts (Oversized Tees)</option>
+                    <option value="CUSTOMIZE_TSHIRTS">Customize T-Shirts (Custom Print & Text)</option>
                     <option value="HOODIES">Hoodies (Fleece)</option>
                     <option value="JACKETS">Jackets (Cargo / Coach)</option>
                   </select>
@@ -911,7 +915,17 @@ export const Products = () => {
               </div>
 
               {/* Toggles */}
-              <div className="flex flex-col sm:flex-row gap-6 pt-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-6 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">
+                  <input
+                    type="checkbox"
+                    checked={formData.customizable || formData.category === 'CUSTOMIZE_TSHIRTS'}
+                    onChange={(e) => setFormData({ ...formData, customizable: e.target.checked })}
+                    className="h-4 w-4 rounded border-zinc-700 text-vibe-accent focus:ring-vibe-accent"
+                  />
+                  <span>Allow Buyer Customization (Text & Print Placement)</span>
+                </label>
+
                 <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">
                   <input
                     type="checkbox"

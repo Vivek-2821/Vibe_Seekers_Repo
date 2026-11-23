@@ -15,6 +15,9 @@ public class OrderItemResponseDto {
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
     private String imageUrl;
+    private String customizationPlacement;
+    private String customText;
+    private String customDesignUrl;
 
     public OrderItemResponseDto() {
     }
@@ -89,5 +92,29 @@ public class OrderItemResponseDto {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getCustomizationPlacement() {
+        return customizationPlacement;
+    }
+
+    public void setCustomizationPlacement(String customizationPlacement) {
+        this.customizationPlacement = customizationPlacement;
+    }
+
+    public String getCustomText() {
+        return customText;
+    }
+
+    public void setCustomText(String customText) {
+        this.customText = customText;
+    }
+
+    public String getCustomDesignUrl() {
+        return customDesignUrl;
+    }
+
+    public void setCustomDesignUrl(String customDesignUrl) {
+        this.customDesignUrl = customDesignUrl;
     }
 }

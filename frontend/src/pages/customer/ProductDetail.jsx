@@ -14,6 +14,7 @@ import {
   Heart,
   Sparkles,
   Info,
+  Upload,
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { resolveImageUrl } from '../../utils/imageUrl';
@@ -42,6 +43,12 @@ export const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Customization State for customizable products
+  const [customPlacement, setCustomPlacement] = useState('Front');
+  const [customText, setCustomText] = useState('');
+  const [customDesignUrl, setCustomDesignUrl] = useState('');
+  const [isUploadingDesign, setIsUploadingDesign] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -141,6 +148,39 @@ export const ProductDetail = () => {
     ? product.colors.split(',').map((c) => c.trim()).filter(Boolean)
     : [];
 
+  const isCustomizableProduct = product && (
+    product.category === 'CUSTOMIZE_TSHIRTS' ||
+    product.customizable ||
+    product.isCustomizable
+  );
+
+  const handleCustomDesignUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Design image must be under 5MB.');
+      return;
+    }
+    setIsUploadingDesign(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'customizations');
+      const res = await axiosInstance.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const url = res.data?.data?.url || res.data?.url;
+      if (url) {
+        setCustomDesignUrl(url);
+      }
+    } catch (err) {
+      console.error('Failed to upload custom artwork', err);
+      alert('Upload failed. Please try again or provide text only.');
+    } finally {
+      setIsUploadingDesign(false);
+    }
+  };
+
   const handleAddToCart = () => {
     if (!selectedSize) {
       setValidationError('Please select a garment size before adding to bag.');
@@ -152,7 +192,13 @@ export const ProductDetail = () => {
     }
 
     setValidationError('');
-    addItem(product, selectedSize, selectedColor, quantity);
+    const customization = isCustomizableProduct ? {
+      placement: customPlacement,
+      customText: customText.trim(),
+      customDesignUrl,
+    } : null;
+
+    addItem(product, selectedSize, selectedColor, quantity, customization);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -163,7 +209,13 @@ export const ProductDetail = () => {
       return;
     }
     setValidationError('');
-    addItem(product, selectedSize, selectedColor, quantity);
+    const customization = isCustomizableProduct ? {
+      placement: customPlacement,
+      customText: customText.trim(),
+      customDesignUrl,
+    } : null;
+
+    addItem(product, selectedSize, selectedColor, quantity, customization);
     navigate('/checkout');
   };
 
@@ -379,6 +431,112 @@ export const ProductDetail = () => {
                 <span>In Stock • Ready to Dispatch via Express Logistics</span>
               </p>
             </div>
+
+            {/* Customization Section for Customizable Products */}
+            {isCustomizableProduct && (
+              <div className="bg-[#101010] border border-zinc-800 p-5 rounded-none space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-vibe-accent" />
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-white">
+                      Custom Streetwear Personalization
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/30">
+                    Included
+                  </span>
+                </div>
+
+                {/* 1. Print Placement Selector */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-2">
+                    Print Placement: <span className="text-white font-extrabold">{customPlacement}</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['Front', 'Back', 'Front & Back'].map((placement) => (
+                      <button
+                        key={placement}
+                        type="button"
+                        onClick={() => setCustomPlacement(placement)}
+                        className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
+                          customPlacement === placement
+                            ? 'bg-white text-black border-white'
+                            : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                        }`}
+                      >
+                        {placement}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Custom Text Input */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1.5">
+                    Custom Text or Typography
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={50}
+                    value={customText}
+                    onChange={(e) => setCustomText(e.target.value)}
+                    placeholder="e.g. VIBE 09, YOUR NAME, ARCHIVE"
+                    className="w-full bg-zinc-950 border border-zinc-800 px-3.5 py-2.5 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-white"
+                  />
+                  <p className="text-[10px] text-zinc-500 mt-1">
+                    Maximum 50 characters • High-definition vinyl / screenprint finish
+                  </p>
+                </div>
+
+                {/* 3. Optional Custom Artwork / Design Upload */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300 mb-1.5">
+                    Upload Custom Design / Artwork (Optional)
+                  </label>
+                  <div className="border border-dashed border-zinc-800 p-3 bg-zinc-950 text-center">
+                    <input
+                      type="file"
+                      id="customDesignPicker"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleCustomDesignUpload}
+                      disabled={isUploadingDesign}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="customDesignPicker"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-1.5 text-zinc-400 hover:text-white"
+                    >
+                      <Upload size={18} className="text-vibe-accent" />
+                      <span className="text-xs font-medium">
+                        {isUploadingDesign ? 'Uploading to Cloudinary...' : 'Click to select custom logo / artwork (PNG, JPG)'}
+                      </span>
+                    </label>
+                  </div>
+
+                  {customDesignUrl && (
+                    <div className="mt-2 p-2 bg-black border border-zinc-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={resolveImageUrl(customDesignUrl)}
+                          alt="Custom Design"
+                          className="w-10 h-10 object-contain bg-zinc-900 border border-zinc-800"
+                        />
+                        <span className="text-xs text-emerald-400 font-bold uppercase">
+                          Artwork Attached
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCustomDesignUrl('')}
+                        className="text-xs text-zinc-400 hover:text-red-400 underline font-semibold"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Quantity Selector */}
             <div className="flex items-center gap-4">

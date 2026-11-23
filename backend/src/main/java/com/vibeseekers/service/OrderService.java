@@ -37,15 +37,15 @@ public class OrderService {
     private static final AtomicInteger orderCounter = new AtomicInteger(1001);
 
     public OrderService(OrderRepository orderRepository,
-                        OrderItemRepository orderItemRepository,
-                        PaymentRepository paymentRepository,
-                        ProductRepository productRepository,
-                        ProductSizeStockRepository sizeStockRepository,
-                        StoreSettingService storeSettingService,
-                        MediaStorageService mediaStorageService,
-                        MailService mailService,
-                        ShiprocketService shiprocketService,
-                        CouponService couponService) {
+            OrderItemRepository orderItemRepository,
+            PaymentRepository paymentRepository,
+            ProductRepository productRepository,
+            ProductSizeStockRepository sizeStockRepository,
+            StoreSettingService storeSettingService,
+            MediaStorageService mediaStorageService,
+            MailService mailService,
+            ShiprocketService shiprocketService,
+            CouponService couponService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.paymentRepository = paymentRepository;
@@ -79,18 +79,22 @@ public class OrderService {
 
         for (OrderItemRequestDto itemDto : request.getItems()) {
             Product product = productRepository.findById(itemDto.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + itemDto.getProductId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Product not found with id: " + itemDto.getProductId()));
 
             if (!product.isActive()) {
                 throw new BadRequestException("Product '" + product.getName() + "' is currently unavailable.");
             }
 
             // Size stock verification
-            ProductSizeStock sizeStock = sizeStockRepository.findByProductIdAndSize(product.getId(), itemDto.getSize().toUpperCase())
-                    .orElseThrow(() -> new BadRequestException("Size " + itemDto.getSize() + " is not available for " + product.getName()));
+            ProductSizeStock sizeStock = sizeStockRepository
+                    .findByProductIdAndSize(product.getId(), itemDto.getSize().toUpperCase())
+                    .orElseThrow(() -> new BadRequestException(
+                            "Size " + itemDto.getSize() + " is not available for " + product.getName()));
 
             if (sizeStock.getStock() < itemDto.getQuantity()) {
-                throw new BadRequestException("Insufficient stock for " + product.getName() + " in size " + itemDto.getSize() + ". Available: " + sizeStock.getStock());
+                throw new BadRequestException("Insufficient stock for " + product.getName() + " in size "
+                        + itemDto.getSize() + ". Available: " + sizeStock.getStock());
             }
 
             // Decrement stock
@@ -108,9 +112,11 @@ public class OrderService {
                     itemDto.getQuantity(),
                     product.getPrice(),
                     lineTotal,
-                    product.getPrimaryImageUrl()
-            );
+                    product.getPrimaryImageUrl());
             orderItem.setColor(itemDto.getColor());
+            orderItem.setCustomizationPlacement(itemDto.getCustomizationPlacement());
+            orderItem.setCustomText(itemDto.getCustomText());
+            orderItem.setCustomDesignUrl(itemDto.getCustomDesignUrl());
             items.add(orderItem);
         }
 
@@ -120,7 +126,8 @@ public class OrderService {
         BigDecimal discountAmount = BigDecimal.ZERO;
         if (request.getCouponCode() != null && !request.getCouponCode().trim().isEmpty()) {
             try {
-                Map<String, Object> couponResult = couponService.validateCoupon(request.getCouponCode().trim(), subtotal);
+                Map<String, Object> couponResult = couponService.validateCoupon(request.getCouponCode().trim(),
+                        subtotal);
                 discountAmount = (BigDecimal) couponResult.get("discountAmount");
                 order.setCouponCode(request.getCouponCode().trim().toUpperCase());
             } catch (Exception ignored) {
@@ -128,12 +135,20 @@ public class OrderService {
         }
         order.setDiscountAmount(discountAmount);
 
-        // Free shipping on prepaid streetwear orders!
+        // Shipping charge configured in StoreSettings
         BigDecimal shippingCharge = BigDecimal.ZERO;
+        try {
+            if (storeSettingService.getShippingSettings().isShippingEnabled()) {
+                shippingCharge = storeSettingService.getShippingSettings().getShippingAmount();
+            }
+        } catch (Exception e) {
+            shippingCharge = BigDecimal.ZERO;
+        }
         order.setShippingCharge(shippingCharge);
 
         BigDecimal finalAmount = subtotal.subtract(discountAmount).add(shippingCharge);
-        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) finalAmount = BigDecimal.ZERO;
+        if (finalAmount.compareTo(BigDecimal.ZERO) < 0)
+            finalAmount = BigDecimal.ZERO;
         order.setTotalAmount(finalAmount);
 
         Order savedOrder = orderRepository.save(order);
@@ -171,7 +186,8 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponseDto submitPaymentProof(String orderNumber, PaymentProofRequest request, MultipartFile screenshotFile) {
+    public OrderResponseDto submitPaymentProof(String orderNumber, PaymentProofRequest request,
+            MultipartFile screenshotFile) {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with order number: " + orderNumber));
 
@@ -200,7 +216,8 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponseDto verifyPaymentByAdmin(Long orderId, PaymentVerificationRequest request, String adminUsername) {
+    public OrderResponseDto verifyPaymentByAdmin(Long orderId, PaymentVerificationRequest request,
+            String adminUsername) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
@@ -234,7 +251,8 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
-        if (order.getPayment() != null && order.getPayment().getPaymentStatus() != PaymentStatus.PAID && order.getPayment().getPaymentMethod() != PaymentMethod.COD) {
+        if (order.getPayment() != null && order.getPayment().getPaymentStatus() != PaymentStatus.PAID
+                && order.getPayment().getPaymentMethod() != PaymentMethod.COD) {
             throw new BadRequestException("Cannot dispatch order to Shiprocket until payment is verified!");
         }
 
@@ -279,7 +297,7 @@ public class OrderService {
 
     private String generateOrderNumber() {
         String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMdd"));
-        int randPart = 1000 + (int)(Math.random() * 9000);
+        int randPart = 1000 + (int) (Math.random() * 9000);
         return "VS-" + datePart + "-" + randPart;
     }
 
@@ -318,7 +336,8 @@ public class OrderService {
             List<OrderItemResponseDto> itemDtos = order.getItems().stream().map(item -> {
                 OrderItemResponseDto itemDto = new OrderItemResponseDto();
                 itemDto.setId(item.getId());
-                if (item.getProduct() != null) itemDto.setProductId(item.getProduct().getId());
+                if (item.getProduct() != null)
+                    itemDto.setProductId(item.getProduct().getId());
                 itemDto.setProductName(item.getProductName());
                 itemDto.setSize(item.getSize());
                 itemDto.setColor(item.getColor());
@@ -326,6 +345,9 @@ public class OrderService {
                 itemDto.setUnitPrice(item.getUnitPrice());
                 itemDto.setTotalPrice(item.getTotalPrice());
                 itemDto.setImageUrl(item.getImageUrl());
+                itemDto.setCustomizationPlacement(item.getCustomizationPlacement());
+                itemDto.setCustomText(item.getCustomText());
+                itemDto.setCustomDesignUrl(item.getCustomDesignUrl());
                 return itemDto;
             }).collect(Collectors.toList());
             dto.setItems(itemDtos);

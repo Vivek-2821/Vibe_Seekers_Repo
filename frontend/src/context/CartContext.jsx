@@ -25,6 +25,29 @@ export const CartProvider = ({ children }) => {
   });
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  const [shippingConfig, setShippingConfig] = useState({
+    shippingEnabled: false,
+    shippingAmount: 79.0,
+  });
+
+  useEffect(() => {
+    const fetchShippingSettings = async () => {
+      try {
+        const res = await axiosInstance.get('/api/settings/shipping');
+        const data = res.data?.data || res.data;
+        if (data && typeof data.shippingEnabled !== 'undefined') {
+          setShippingConfig({
+            shippingEnabled: !!data.shippingEnabled,
+            shippingAmount: Number(data.shippingAmount) || 79.0,
+          });
+        }
+      } catch (err) {
+        // Fallback default: free shipping
+        console.warn('Could not load shipping settings from backend, default to free shipping', err);
+      }
+    };
+    fetchShippingSettings();
+  }, []);
 
   useEffect(() => {
     try {
@@ -50,16 +73,22 @@ export const CartProvider = ({ children }) => {
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
-  const addItem = (product, size = 'L', color = '', quantity = 1) => {
+  const addItem = (product, size = 'L', color = '', quantity = 1, customization = null) => {
     const chosenColor = color || (product.colors ? product.colors.split(',')[0].trim() : 'Classic Black');
     const chosenSize = (size || 'L').toUpperCase();
+
+    const customPlacement = customization?.placement || customization?.customizationPlacement || null;
+    const customText = customization?.customText || customization?.text || null;
+    const customDesignUrl = customization?.customDesignUrl || customization?.designUrl || null;
 
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex(
         (item) =>
           item.productId === product.id &&
           item.size === chosenSize &&
-          item.color === chosenColor
+          item.color === chosenColor &&
+          (item.customText || '') === (customText || '') &&
+          (item.customizationPlacement || '') === (customPlacement || '')
       );
 
       if (existingIndex > -1) {
@@ -80,6 +109,9 @@ export const CartProvider = ({ children }) => {
           size: chosenSize,
           color: chosenColor,
           quantity,
+          customizationPlacement: customPlacement,
+          customText: customText,
+          customDesignUrl: customDesignUrl,
           imageUrl: resolveImageUrl(product.primaryImageUrl || product.imageUrl || (product.images?.[0]?.imageUrl ?? product.images?.[0]?.url ?? '')),
         },
       ];
@@ -118,7 +150,9 @@ export const CartProvider = ({ children }) => {
 
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
-  const shippingEstimate = 0; // Free express shipping across India on all orders
+  const shippingEstimate = shippingConfig.shippingEnabled
+    ? (Number(shippingConfig.shippingAmount) || 79.0)
+    : 0;
 
   // Calculate discount amount based on applied coupon and subtotal
   let discountAmount = 0;
@@ -186,6 +220,8 @@ export const CartProvider = ({ children }) => {
         discountAmount,
         finalTotal,
         shippingEstimate,
+        shippingConfig,
+        isShippingFree: !shippingConfig.shippingEnabled,
         isCartOpen,
         openCart,
         closeCart,

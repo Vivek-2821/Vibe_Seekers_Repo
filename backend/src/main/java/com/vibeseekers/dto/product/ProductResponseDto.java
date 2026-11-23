@@ -39,6 +39,10 @@ public class ProductResponseDto {
     @JsonAlias({"isActive", "active"})
     private boolean active;
 
+    @JsonProperty("customizable")
+    @JsonAlias({"isCustomizable", "customizable"})
+    private boolean customizable;
+
     @JsonProperty("primaryImageUrl")
     @JsonAlias({"primaryImageUrl", "imageUrl", "url"})
     private String primaryImageUrl;
@@ -176,6 +180,14 @@ public class ProductResponseDto {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isCustomizable() {
+        return customizable;
+    }
+
+    public void setCustomizable(boolean customizable) {
+        this.customizable = customizable;
     }
 
     public String getPrimaryImageUrl() {

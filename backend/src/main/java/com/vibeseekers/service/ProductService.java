@@ -29,9 +29,9 @@ public class ProductService {
     private final MediaStorageService mediaStorageService;
 
     public ProductService(ProductRepository productRepository,
-                          ProductImageRepository productImageRepository,
-                          ProductSizeStockRepository sizeStockRepository,
-                          MediaStorageService mediaStorageService) {
+            ProductImageRepository productImageRepository,
+            ProductSizeStockRepository sizeStockRepository,
+            MediaStorageService mediaStorageService) {
         this.productRepository = productRepository;
         this.productImageRepository = productImageRepository;
         this.sizeStockRepository = sizeStockRepository;
@@ -39,16 +39,16 @@ public class ProductService {
     }
 
     public Page<ProductResponseDto> getPublicProducts(ProductCategory category,
-                                                      BigDecimal minPrice,
-                                                      BigDecimal maxPrice,
-                                                      String size,
-                                                      String color,
-                                                      Boolean bestSellerOnly,
-                                                      Boolean newArrivalOnly,
-                                                      String keyword,
-                                                      String sortBy,
-                                                      int page,
-                                                      int pageSize) {
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String size,
+            String color,
+            Boolean bestSellerOnly,
+            Boolean newArrivalOnly,
+            String keyword,
+            String sortBy,
+            int page,
+            int pageSize) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         if ("price_asc".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(Sort.Direction.ASC, "price");
@@ -62,8 +62,7 @@ public class ProductService {
 
         Pageable pageable = PageRequest.of(page, pageSize, sort);
         Page<Product> products = productRepository.findWithFilters(
-                true, category, minPrice, maxPrice, size, color, bestSellerOnly, newArrivalOnly, keyword, pageable
-        );
+                true, category, minPrice, maxPrice, size, color, bestSellerOnly, newArrivalOnly, keyword, pageable);
         return products.map(this::mapToResponseDto);
     }
 
@@ -111,9 +110,11 @@ public class ProductService {
         product.setCategory(request.getCategory());
         product.setPrice(request.getPrice());
         product.setMrp(request.getMrp());
-        if (request.getMrp() != null && request.getPrice() != null && request.getMrp().compareTo(request.getPrice()) > 0) {
+        if (request.getMrp() != null && request.getPrice() != null
+                && request.getMrp().compareTo(request.getPrice()) > 0) {
             BigDecimal diff = request.getMrp().subtract(request.getPrice());
-            int disc = diff.multiply(BigDecimal.valueOf(100)).divide(request.getMrp(), 0, RoundingMode.HALF_UP).intValue();
+            int disc = diff.multiply(BigDecimal.valueOf(100)).divide(request.getMrp(), 0, RoundingMode.HALF_UP)
+                    .intValue();
             product.setDiscountPercent(disc);
         } else if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
             product.setDiscountPercent(request.getDiscountPercent());
@@ -129,6 +130,7 @@ public class ProductService {
         product.setWashingInstructions(request.getWashingInstructions());
         product.setCollectionName(request.getCollectionName());
         product.setActive(request.isActive());
+        product.setCustomizable(request.isCustomizable() || request.getCategory() == ProductCategory.CUSTOMIZE_TSHIRTS);
 
         Product savedProduct = productRepository.save(product);
 
@@ -148,8 +150,7 @@ public class ProductService {
                             imgUrl,
                             imgDto.getPublicId(),
                             imgDto.isPrimary() || i == 0,
-                            i
-                    );
+                            i);
                     productImageRepository.save(pImg);
                 }
             }
@@ -170,9 +171,11 @@ public class ProductService {
         product.setCategory(request.getCategory());
         product.setPrice(request.getPrice());
         product.setMrp(request.getMrp());
-        if (request.getMrp() != null && request.getPrice() != null && request.getMrp().compareTo(request.getPrice()) > 0) {
+        if (request.getMrp() != null && request.getPrice() != null
+                && request.getMrp().compareTo(request.getPrice()) > 0) {
             BigDecimal diff = request.getMrp().subtract(request.getPrice());
-            int disc = diff.multiply(BigDecimal.valueOf(100)).divide(request.getMrp(), 0, RoundingMode.HALF_UP).intValue();
+            int disc = diff.multiply(BigDecimal.valueOf(100)).divide(request.getMrp(), 0, RoundingMode.HALF_UP)
+                    .intValue();
             product.setDiscountPercent(disc);
         } else if (request.getDiscountPercent() != null && request.getDiscountPercent() > 0) {
             product.setDiscountPercent(request.getDiscountPercent());
@@ -188,6 +191,7 @@ public class ProductService {
         product.setWashingInstructions(request.getWashingInstructions());
         product.setCollectionName(request.getCollectionName());
         product.setActive(request.isActive());
+        product.setCustomizable(request.isCustomizable() || request.getCategory() == ProductCategory.CUSTOMIZE_TSHIRTS);
 
         // Update size stocks
         sizeStockRepository.deleteByProductId(product.getId());
@@ -200,7 +204,8 @@ public class ProductService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
 
-            List<ProductImage> currentImages = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
+            List<ProductImage> currentImages = productImageRepository
+                    .findByProductIdOrderByDisplayOrderAsc(product.getId());
             for (ProductImage img : currentImages) {
                 if (!keepImageIds.contains(img.getId())) {
                     mediaStorageService.deleteFile(img.getPublicId());
@@ -260,7 +265,8 @@ public class ProductService {
     }
 
     private void processUploadedImages(Product product, List<MultipartFile> imageFiles) {
-        if (imageFiles == null || imageFiles.isEmpty()) return;
+        if (imageFiles == null || imageFiles.isEmpty())
+            return;
 
         List<ProductImage> existing = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
         int startOrder = existing.size();
@@ -268,26 +274,28 @@ public class ProductService {
 
         for (int i = 0; i < imageFiles.size(); i++) {
             MultipartFile file = imageFiles.get(i);
-            if (file.isEmpty()) continue;
+            if (file.isEmpty())
+                continue;
 
             MediaStorageService.UploadResult result = mediaStorageService.storeFile(file, "products");
             boolean isPrimary = !hasPrimary && (i == 0);
-            if (isPrimary) hasPrimary = true;
+            if (isPrimary)
+                hasPrimary = true;
 
             ProductImage pImg = new ProductImage(
                     product,
                     result.getUrl(),
                     result.getPublicId(),
                     isPrimary,
-                    startOrder + i
-            );
+                    startOrder + i);
             productImageRepository.save(pImg);
         }
     }
 
     private String generateUniqueSlug(String name) {
         String baseSlug = name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
-        if (baseSlug.isEmpty()) baseSlug = "product";
+        if (baseSlug.isEmpty())
+            baseSlug = "product";
 
         String slug = baseSlug;
         int count = 1;
@@ -307,9 +315,11 @@ public class ProductService {
         dto.setMrp(product.getMrp());
         if (product.getDiscountPercent() != null && product.getDiscountPercent() > 0) {
             dto.setDiscountPercent(product.getDiscountPercent());
-        } else if (product.getMrp() != null && product.getPrice() != null && product.getMrp().compareTo(product.getPrice()) > 0) {
+        } else if (product.getMrp() != null && product.getPrice() != null
+                && product.getMrp().compareTo(product.getPrice()) > 0) {
             BigDecimal diff = product.getMrp().subtract(product.getPrice());
-            int disc = diff.multiply(BigDecimal.valueOf(100)).divide(product.getMrp(), 0, RoundingMode.HALF_UP).intValue();
+            int disc = diff.multiply(BigDecimal.valueOf(100)).divide(product.getMrp(), 0, RoundingMode.HALF_UP)
+                    .intValue();
             dto.setDiscountPercent(disc);
         } else {
             dto.setDiscountPercent(0);
@@ -323,11 +333,13 @@ public class ProductService {
         dto.setWashingInstructions(product.getWashingInstructions());
         dto.setCollectionName(product.getCollectionName());
         dto.setActive(product.isActive());
+        dto.setCustomizable(product.isCustomizable());
         dto.setCreatedAt(product.getCreatedAt());
 
         List<ProductImage> images = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
         List<ProductImageDto> imageDtos = images.stream()
-                .map(img -> new ProductImageDto(img.getId(), img.getImageUrl(), img.getPublicId(), img.isPrimary(), img.getDisplayOrder()))
+                .map(img -> new ProductImageDto(img.getId(), img.getImageUrl(), img.getPublicId(), img.isPrimary(),
+                        img.getDisplayOrder()))
                 .collect(Collectors.toList());
         dto.setImages(imageDtos);
 

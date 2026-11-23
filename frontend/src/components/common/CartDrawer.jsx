@@ -170,6 +170,20 @@ export const CartDrawer = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* Customization Details Badge */}
+                      {(item.customizationPlacement || item.customText || item.customDesignUrl) && (
+                        <div className="mt-2 p-1.5 bg-zinc-950 border border-zinc-800 rounded text-[10px] text-zinc-400 space-y-0.5">
+                          <div>
+                            <span className="text-vibe-accent font-bold uppercase">Print:</span> {item.customizationPlacement || 'Custom'}
+                          </div>
+                          {item.customText && (
+                            <div>
+                              <span className="text-zinc-500">Text:</span> "{item.customText}"
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
@@ -241,7 +255,11 @@ export const CartDrawer = () => {
                   )}
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span className="text-emerald-400 uppercase font-semibold">Free Express</span>
+                    {shippingEstimate > 0 ? (
+                      <span className="font-bold text-white">₹{shippingEstimate.toLocaleString('en-IN')}</span>
+                    ) : (
+                      <span className="text-emerald-400 uppercase font-semibold">Free (₹0)</span>
+                    )}
                   </div>
                   <div className="border-t border-zinc-800 pt-2 flex justify-between text-base font-bold text-white">
                     <span>Estimated Total</span>

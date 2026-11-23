@@ -69,7 +69,7 @@ export const Cart = () => {
   return (
     <div className="bg-[#080808] min-h-screen text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        
+
         {/* Page Header */}
         <div className="border-b border-zinc-800 pb-6 mb-8 flex items-center justify-between">
           <div>
@@ -89,7 +89,7 @@ export const Cart = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+
           {/* Left: Items List (8 cols) */}
           <div className="lg:col-span-8 space-y-4">
             {items.map((item) => (
@@ -138,6 +138,44 @@ export const Cart = () => {
                     <span className="font-mono text-zinc-300">₹{item.price.toLocaleString('en-IN')} each</span>
                   </div>
 
+                  {/* Customization Details Badge */}
+                  {(item.customizationPlacement || item.customText || item.customDesignUrl) && (
+                    <div className="mt-2.5 p-2 bg-zinc-950 border border-zinc-800 text-[11px] space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 bg-vibe-accent/20 text-vibe-accent font-extrabold uppercase text-[9px] tracking-wider">
+                          CUSTOM PRINT
+                        </span>
+                        {item.customizationPlacement && (
+                          <span className="text-zinc-300">
+                            Placement: <strong className="text-white">{item.customizationPlacement}</strong>
+                          </span>
+                        )}
+                      </div>
+                      {item.customText && (
+                        <div className="text-zinc-400">
+                          Text: <span className="text-white font-mono font-bold">"{item.customText}"</span>
+                        </div>
+                      )}
+                      {item.customDesignUrl && (
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <img
+                            src={resolveImageUrl(item.customDesignUrl)}
+                            alt="Custom Artwork"
+                            className="w-6 h-6 object-cover border border-zinc-700 bg-black"
+                          />
+                          <a
+                            href={item.customDesignUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-vibe-accent hover:underline"
+                          >
+                            View Artwork
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Quantity & Item Subtotal */}
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center border border-zinc-700 bg-black">
@@ -184,7 +222,7 @@ export const Cart = () => {
           {/* Right: Summary & Promo Code (4 cols) */}
           <div className="lg:col-span-4">
             <div className="bg-[#121212] border border-zinc-800 p-6 space-y-6 sticky top-28">
-              
+
               <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white pb-3 border-b border-zinc-800">
                 ORDER SUMMARY
               </h3>
@@ -252,7 +290,11 @@ export const Cart = () => {
                 )}
                 <div className="flex justify-between">
                   <span>Express Courier Shipping</span>
-                  <span className="text-emerald-400 font-bold uppercase">FREE</span>
+                  {shippingEstimate > 0 ? (
+                    <span className="font-bold text-white">₹{shippingEstimate.toLocaleString('en-IN')}</span>
+                  ) : (
+                    <span className="text-emerald-400 font-bold uppercase">FREE (₹0)</span>
+                  )}
                 </div>
                 <div className="border-t border-zinc-800 pt-3 flex justify-between text-base font-black text-white">
                   <span>ESTIMATED TOTAL</span>

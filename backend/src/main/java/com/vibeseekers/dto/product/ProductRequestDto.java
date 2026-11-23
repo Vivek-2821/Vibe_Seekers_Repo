@@ -53,6 +53,10 @@ public class ProductRequestDto {
     @JsonAlias({"isActive", "active"})
     private boolean active = true;
 
+    @JsonProperty("customizable")
+    @JsonAlias({"isCustomizable", "customizable"})
+    private boolean customizable = false;
+
     private List<SizeStockDto> sizeStocks = new ArrayList<>();
 
     @JsonProperty("existingImages")
@@ -172,6 +176,14 @@ public class ProductRequestDto {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isCustomizable() {
+        return customizable;
+    }
+
+    public void setCustomizable(boolean customizable) {
+        this.customizable = customizable;
     }
 
     public List<SizeStockDto> getSizeStocks() {

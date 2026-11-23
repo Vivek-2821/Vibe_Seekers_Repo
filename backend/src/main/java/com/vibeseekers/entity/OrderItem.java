@@ -41,6 +41,15 @@ public class OrderItem {
     @Column(length = 1000)
     private String imageUrl;
 
+    @Column(length = 100)
+    private String customizationPlacement;
+
+    @Column(length = 500)
+    private String customText;
+
+    @Column(length = 1000)
+    private String customDesignUrl;
+
     public OrderItem() {
     }
 
@@ -134,5 +143,29 @@ public class OrderItem {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getCustomizationPlacement() {
+        return customizationPlacement;
+    }
+
+    public void setCustomizationPlacement(String customizationPlacement) {
+        this.customizationPlacement = customizationPlacement;
+    }
+
+    public String getCustomText() {
+        return customText;
+    }
+
+    public void setCustomText(String customText) {
+        this.customText = customText;
+    }
+
+    public String getCustomDesignUrl() {
+        return customDesignUrl;
+    }
+
+    public void setCustomDesignUrl(String customDesignUrl) {
+        this.customDesignUrl = customDesignUrl;
     }
 }

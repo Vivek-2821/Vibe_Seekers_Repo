@@ -20,6 +20,10 @@ public class OrderItemRequestDto {
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
 
+    private String customizationPlacement;
+    private String customText;
+    private String customDesignUrl;
+
     public OrderItemRequestDto() {
     }
 
@@ -59,5 +63,29 @@ public class OrderItemRequestDto {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public String getCustomizationPlacement() {
+        return customizationPlacement;
+    }
+
+    public void setCustomizationPlacement(String customizationPlacement) {
+        this.customizationPlacement = customizationPlacement;
+    }
+
+    public String getCustomText() {
+        return customText;
+    }
+
+    public void setCustomText(String customText) {
+        this.customText = customText;
+    }
+
+    public String getCustomDesignUrl() {
+        return customDesignUrl;
+    }
+
+    public void setCustomDesignUrl(String customDesignUrl) {
+        this.customDesignUrl = customDesignUrl;
     }
 }

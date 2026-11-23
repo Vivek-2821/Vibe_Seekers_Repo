@@ -51,11 +51,12 @@ export const Navbar = () => {
   }, [location.pathname]);
 
   const navLinks = [
-    { name: 'Home', path: '/' },
     { name: 'Shop All', path: '/shop' },
+    { name: 'Customize T-Shirts', path: '/shop?category=CUSTOMIZE_TSHIRTS' },
+    { name: 'T-Shirts', path: '/shop?category=TSHIRTS' },
+    { name: 'Hoodies', path: '/shop?category=HOODIES' },
+    { name: 'Jackets', path: '/shop?category=JACKETS' },
     { name: 'New Arrivals', path: '/shop?filter=new' },
-    { name: 'Best Sellers', path: '/shop?filter=bestseller' },
-    { name: 'About Us', path: '/about' },
     { name: 'Track Order', path: '/track-order' },
   ];
 
@@ -75,15 +76,14 @@ export const Navbar = () => {
 
       {/* 2. Main Sticky Navbar */}
       <header
-        className={`sticky top-0 z-40 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-[#080808]/95 backdrop-blur-md border-b border-zinc-800 shadow-xl'
-            : 'bg-[#080808] border-b border-zinc-800/60'
-        }`}
+        className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled
+          ? 'bg-[#080808]/95 backdrop-blur-md border-b border-zinc-800 shadow-xl'
+          : 'bg-[#080808] border-b border-zinc-800/60'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 sm:h-24">
-            
+
             {/* Mobile Hamburger Button */}
             <div className="flex items-center lg:hidden">
               <button
@@ -114,15 +114,13 @@ export const Navbar = () => {
                   <Link
                     key={link.name}
                     to={link.path}
-                    className={`text-xs font-bold tracking-[0.18em] uppercase transition-colors relative py-1.5 group ${
-                      isActive ? 'text-white' : 'text-zinc-400 hover:text-white'
-                    }`}
+                    className={`text-xs font-bold tracking-[0.18em] uppercase transition-colors relative py-1.5 group ${isActive ? 'text-white' : 'text-zinc-400 hover:text-white'
+                      }`}
                   >
                     {link.name}
                     <span
-                      className={`absolute bottom-0 left-0 h-[2px] bg-white transition-all duration-300 ${
-                        isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                      }`}
+                      className={`absolute bottom-0 left-0 h-[2px] bg-white transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                        }`}
                     />
                   </Link>
                 );

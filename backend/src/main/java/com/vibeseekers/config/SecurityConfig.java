@@ -62,6 +62,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tracking/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/settings/**").permitAll()
+                        .requestMatchers("/api/upload/**").permitAll()
 
                         // Admin restricted endpoints
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")

@@ -1,10 +1,14 @@
 package com.vibeseekers.service;
 
+import com.vibeseekers.dto.setting.ShippingSettingsDto;
 import com.vibeseekers.entity.StoreSetting;
+import com.vibeseekers.entity.StoreSettings;
 import com.vibeseekers.repository.StoreSettingRepository;
+import com.vibeseekers.repository.StoreSettingsRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +17,38 @@ import java.util.Map;
 public class StoreSettingService {
 
     private final StoreSettingRepository repository;
+    private final StoreSettingsRepository storeSettingsRepository;
 
-    public StoreSettingService(StoreSettingRepository repository) {
+    public StoreSettingService(StoreSettingRepository repository,
+                               StoreSettingsRepository storeSettingsRepository) {
         this.repository = repository;
+        this.storeSettingsRepository = storeSettingsRepository;
+    }
+
+    public ShippingSettingsDto getShippingSettings() {
+        StoreSettings settings = storeSettingsRepository.findById(1L).orElseGet(() -> {
+            StoreSettings s = new StoreSettings();
+            s.setId(1L);
+            s.setShippingEnabled(false);
+            s.setShippingAmount(new BigDecimal("79.00"));
+            return storeSettingsRepository.save(s);
+        });
+        return new ShippingSettingsDto(settings.isShippingEnabled(), settings.getShippingAmount());
+    }
+
+    @Transactional
+    public ShippingSettingsDto updateShippingSettings(ShippingSettingsDto dto) {
+        StoreSettings settings = storeSettingsRepository.findById(1L).orElseGet(() -> {
+            StoreSettings s = new StoreSettings();
+            s.setId(1L);
+            return s;
+        });
+        settings.setShippingEnabled(dto.isShippingEnabled());
+        if (dto.getShippingAmount() != null) {
+            settings.setShippingAmount(dto.getShippingAmount());
+        }
+        StoreSettings saved = storeSettingsRepository.save(settings);
+        return new ShippingSettingsDto(saved.isShippingEnabled(), saved.getShippingAmount());
     }
 
     public String getSetting(String key, String defaultValue) {
