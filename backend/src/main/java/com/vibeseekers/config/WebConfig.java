@@ -1,7 +1,9 @@
 package com.vibeseekers.config;
 
+import com.vibeseekers.entity.ProductCategory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -19,5 +21,10 @@ public class WebConfig implements WebMvcConfigurer {
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + uploadPath.toString() + "/");
+    }
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(String.class, ProductCategory.class, ProductCategory::fromString);
     }
 }

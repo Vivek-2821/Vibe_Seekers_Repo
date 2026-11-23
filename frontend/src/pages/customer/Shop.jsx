@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X, SlidersHorizontal, ArrowUpDown, Check, RefreshCw } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { ProductCard } from '../../components/shop/ProductCard';
 import { smartProductSearch } from '../../utils/searchUtils';
+import {
+  CANONICAL_CATEGORIES,
+  normalizeCategory,
+  formatCategoryLabel,
+  matchCategory,
+  getDynamicCategories,
+} from '../../utils/categories';
 
 export const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,10 +19,9 @@ export const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [totalElements, setTotalElements] = useState(0);
 
   // Active filter state from URL search params
-  const selectedCategory = searchParams.get('category') || '';
+  const categoryParam = searchParams.get('category') || '';
   const selectedSize = searchParams.get('size') || '';
   const selectedColor = searchParams.get('color') || '';
   const searchQuery = searchParams.get('keyword') || '';
@@ -24,78 +30,63 @@ export const Shop = () => {
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
 
-  const categories = [
-    { label: 'All', value: '' },
-    { label: 'T-Shirts', value: 'TSHIRTS' },
-    { label: 'Customize T-Shirts', value: 'CUSTOMIZE_TSHIRTS' },
-    { label: 'Hoodies', value: 'HOODIES' },
-    { label: 'Jackets', value: 'JACKETS' },
-    { label: 'Shirts', value: 'SHIRTS' },
-  ];
+  // Extract dynamic categories from fetched products (starting with "All")
+  const categories = useMemo(() => getDynamicCategories(products), [products]);
+
+  // Determine active category selection based on URL query param (defaults to "All")
+  const selectedCategory = useMemo(() => {
+    if (!categoryParam || normalizeCategory(categoryParam) === 'all') {
+      return 'All';
+    }
+    const match = categories.find((c) => normalizeCategory(c) === normalizeCategory(categoryParam));
+    return match || formatCategoryLabel(categoryParam) || 'All';
+  }, [categoryParam, categories]);
 
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
   const popularColors = ['Black', 'White', 'Acid', 'Grey', 'Olive', 'Charcoal'];
 
-  const isCategorySelected = (catVal) => {
-    if (!selectedCategory && !catVal) return true;
-    if (!selectedCategory || !catVal) return false;
-    return selectedCategory.trim().toUpperCase() === catVal.trim().toUpperCase();
-  };
-
   useEffect(() => {
+    let isMounted = true;
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const params = {
-          category: selectedCategory ? selectedCategory.trim().toUpperCase() : undefined,
-          size: selectedSize || undefined,
-          color: selectedColor || undefined,
-          keyword: searchQuery || undefined,
-          minPrice: minPrice || undefined,
-          maxPrice: maxPrice || undefined,
-          newArrivalOnly: filterType === 'new' ? true : undefined,
-          bestSellerOnly: filterType === 'bestseller' ? true : undefined,
-          sortBy,
-          page: 0,
-          pageSize: 60,
-        };
-
-        const res = await axiosInstance.get('/api/products', { params });
+        const res = await axiosInstance.get('/api/products', {
+          params: { pageSize: 120, sortBy: 'newest' },
+        });
         const data = res.data?.data || res.data || {};
-        let content = Array.isArray(data) ? data : (Array.isArray(data.content) ? data.content : []);
+        const content = Array.isArray(data)
+          ? data
+          : Array.isArray(data.content)
+            ? data.content
+            : [];
 
-        // Fallback: If keyword search produced 0 direct SQL results, apply smart similar-word matching on all catalog items
-        if (searchQuery && content.length === 0) {
-          try {
-            const allRes = await axiosInstance.get('/api/products?pageSize=100');
-            const allData = allRes.data?.data || allRes.data || {};
-            const allItems = Array.isArray(allData) ? allData : (Array.isArray(allData.content) ? allData.content : []);
-            content = smartProductSearch(allItems, searchQuery);
-          } catch (e) {
-            console.warn('Smart product search fallback failed', e);
-          }
+        if (isMounted) {
+          setProducts(content);
         }
-
-        setProducts(content);
-        setTotalElements(content.length);
       } catch (err) {
         console.error('Failed to load shop products', err);
-        setProducts([]);
-        setTotalElements(0);
+        if (isMounted) {
+          setProducts([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProducts();
-  }, [selectedCategory, selectedSize, selectedColor, searchQuery, filterType, sortBy, minPrice, maxPrice]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const updateFilter = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
-    if (value) {
-      newParams.set(key, value);
-    } else {
+    if (!value || value === 'All' || (key === 'category' && normalizeCategory(value) === 'all')) {
       newParams.delete(key);
+    } else {
+      newParams.set(key, value);
     }
     setSearchParams(newParams);
   };
@@ -104,8 +95,69 @@ export const Shop = () => {
     setSearchParams(new URLSearchParams());
   };
 
+  // Filtered and sorted product catalog
+  const filteredProducts = useMemo(() => {
+    let list = Array.isArray(products) ? [...products] : [];
+
+    // 1. Category filter: "All" displays every product without restriction
+    if (selectedCategory && selectedCategory !== 'All' && normalizeCategory(selectedCategory) !== 'all') {
+      list = list.filter((p) => matchCategory(p.category, selectedCategory));
+    }
+
+    // 2. Drop Type
+    if (filterType === 'new') {
+      list = list.filter((p) => p.newArrival || p.isNewArrival);
+    } else if (filterType === 'bestseller') {
+      list = list.filter((p) => p.bestSeller || p.isBestSeller);
+    }
+
+    // 3. Size Filter
+    if (selectedSize) {
+      list = list.filter(
+        (p) =>
+          Array.isArray(p.sizeStocks) &&
+          p.sizeStocks.some((s) => s.size === selectedSize && s.stock > 0)
+      );
+    }
+
+    // 4. Color Tone Filter
+    if (selectedColor) {
+      list = list.filter(
+        (p) => p.colors && p.colors.toLowerCase().includes(selectedColor.toLowerCase())
+      );
+    }
+
+    // 5. Price Range Filter
+    if (minPrice) {
+      list = list.filter((p) => Number(p.price) >= Number(minPrice));
+    }
+    if (maxPrice) {
+      list = list.filter((p) => Number(p.price) <= Number(maxPrice));
+    }
+
+    // 6. Smart Search Query Matching
+    if (searchQuery && searchQuery.trim() !== '') {
+      list = smartProductSearch(list, searchQuery.trim());
+    }
+
+    // 7. Sort Order
+    if (sortBy === 'price_asc') {
+      list.sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sortBy === 'price_desc') {
+      list.sort((a, b) => Number(b.price) - Number(a.price));
+    } else if (sortBy === 'popularity') {
+      list.sort((a, b) => {
+        const aPop = a.bestSeller || a.isBestSeller ? 1 : 0;
+        const bPop = b.bestSeller || b.isBestSeller ? 1 : 0;
+        return bPop - aPop;
+      });
+    }
+
+    return list;
+  }, [products, selectedCategory, filterType, selectedSize, selectedColor, minPrice, maxPrice, searchQuery, sortBy]);
+
   const hasActiveFilters = !!(
-    selectedCategory ||
+    (selectedCategory && selectedCategory !== 'All') ||
     selectedSize ||
     selectedColor ||
     searchQuery ||
@@ -113,6 +165,13 @@ export const Shop = () => {
     minPrice ||
     maxPrice
   );
+
+  const isCatActive = (cat) => {
+    if (selectedCategory === 'All' || !selectedCategory) {
+      return cat === 'All' || normalizeCategory(cat) === 'all';
+    }
+    return normalizeCategory(selectedCategory) === normalizeCategory(cat);
+  };
 
   return (
     <div className="bg-[#080808] min-h-screen text-white">
@@ -127,8 +186,8 @@ export const Shop = () => {
               {filterType === 'bestseller' && <span className="text-white font-extrabold">• BEST SELLERS</span>}
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white mt-1">
-              {selectedCategory
-                ? categories.find((c) => isCategorySelected(c.value))?.label || selectedCategory
+              {selectedCategory && selectedCategory !== 'All'
+                ? selectedCategory
                 : filterType === 'new'
                   ? 'NEW ARRIVALS'
                   : filterType === 'bestseller'
@@ -136,7 +195,7 @@ export const Shop = () => {
                     : 'STREETWEAR COLLECTION'}
             </h1>
             <p className="text-xs text-zinc-400 mt-2 uppercase tracking-wider">
-              Showing {(products || []).length} {(products || []).length === 1 ? 'garment' : 'garments'} • Free express courier delivery pan-India
+              Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'garment' : 'garments'} • Free express courier delivery pan-India
             </p>
           </div>
 
@@ -170,18 +229,18 @@ export const Shop = () => {
         {/* Horizontal Category Filter Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 border-b border-zinc-800/60 no-scrollbar">
           {categories.map((cat) => {
-            const active = isCategorySelected(cat.value);
+            const active = isCatActive(cat);
             return (
               <button
-                key={cat.value || 'all'}
-                onClick={() => updateFilter('category', cat.value)}
+                key={cat}
+                onClick={() => updateFilter('category', cat === 'All' ? '' : cat)}
                 className={`px-4 py-2 text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border ${
                   active
                     ? 'bg-white text-black border-white shadow-md'
                     : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
                 }`}
               >
-                {cat.label}
+                {cat}
               </button>
             );
           })}
@@ -193,9 +252,9 @@ export const Shop = () => {
             <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mr-1">
               Active Filters:
             </span>
-            {selectedCategory && (
+            {selectedCategory && selectedCategory !== 'All' && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
-                Category: {categories.find((c) => isCategorySelected(c.value))?.label || selectedCategory}
+                Category: {selectedCategory}
                 <button onClick={() => updateFilter('category', '')}><X size={12} /></button>
               </span>
             )}
@@ -244,18 +303,18 @@ export const Shop = () => {
               </h4>
               <div className="space-y-1.5">
                 {categories.map((cat) => {
-                  const active = isCategorySelected(cat.value);
+                  const active = isCatActive(cat);
                   return (
                     <button
-                      key={cat.value || 'all'}
-                      onClick={() => updateFilter('category', cat.value)}
+                      key={cat}
+                      onClick={() => updateFilter('category', cat === 'All' ? '' : cat)}
                       className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
                         active
                           ? 'bg-white text-black font-bold'
                           : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                       }`}
                     >
-                      <span>{cat.label}</span>
+                      <span>{cat}</span>
                       {active && <Check size={14} />}
                     </button>
                   );
@@ -271,16 +330,22 @@ export const Shop = () => {
               <div className="space-y-1.5">
                 <button
                   onClick={() => updateFilter('filter', filterType === 'new' ? '' : 'new')}
-                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${filterType === 'new' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                    }`}
+                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
+                    filterType === 'new'
+                      ? 'bg-white text-black font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
                 >
                   <span>New Drops Only</span>
                   {filterType === 'new' && <Check size={14} />}
                 </button>
                 <button
                   onClick={() => updateFilter('filter', filterType === 'bestseller' ? '' : 'bestseller')}
-                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${filterType === 'bestseller' ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                    }`}
+                  className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
+                    filterType === 'bestseller'
+                      ? 'bg-white text-black font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                  }`}
                 >
                   <span>Best Sellers Only</span>
                   {filterType === 'bestseller' && <Check size={14} />}
@@ -298,10 +363,11 @@ export const Shop = () => {
                   <button
                     key={sz}
                     onClick={() => updateFilter('size', selectedSize === sz ? '' : sz)}
-                    className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${selectedSize === sz
-                      ? 'bg-white text-black border-white'
-                      : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
-                      }`}
+                    className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
+                      selectedSize === sz
+                        ? 'bg-white text-black border-white'
+                        : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                    }`}
                   >
                     {sz}
                   </button>
@@ -319,10 +385,11 @@ export const Shop = () => {
                   <button
                     key={col}
                     onClick={() => updateFilter('color', selectedColor === col ? '' : col)}
-                    className={`px-3 py-1.5 text-xs font-medium uppercase tracking-wider border transition-colors ${selectedColor === col
-                      ? 'bg-white text-black border-white font-bold'
-                      : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
-                      }`}
+                    className={`px-3 py-1.5 text-xs font-medium uppercase tracking-wider border transition-colors ${
+                      selectedColor === col
+                        ? 'bg-white text-black border-white font-bold'
+                        : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                    }`}
                   >
                     {col}
                   </button>
@@ -385,9 +452,9 @@ export const Shop = () => {
                   <div key={i} className="aspect-[3/4] bg-zinc-900 animate-pulse border border-zinc-800" />
                 ))}
               </div>
-            ) : (products || []).length > 0 ? (
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                {(products || []).map((product) => (
+                {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
@@ -397,7 +464,7 @@ export const Shop = () => {
                   No products matched your criteria
                 </p>
                 <p className="text-xs text-zinc-400 mb-6">
-                  Try broadening your filters or searching for alternative streetwear keywords.
+                  Try broadening your filters or selecting a different category.
                 </p>
                 <button
                   onClick={clearAllFilters}
@@ -442,19 +509,19 @@ export const Shop = () => {
                     <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Category</h4>
                     <div className="space-y-1">
                       {categories.map((cat) => {
-                        const active = isCategorySelected(cat.value);
+                        const active = isCatActive(cat);
                         return (
                           <button
-                            key={cat.value || 'all'}
+                            key={cat}
                             onClick={() => {
-                              updateFilter('category', cat.value);
+                              updateFilter('category', cat === 'All' ? '' : cat);
                               setMobileFilterOpen(false);
                             }}
                             className={`w-full text-left text-xs font-medium uppercase tracking-wider py-2 px-2 flex items-center justify-between ${
                               active ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white'
                             }`}
                           >
-                            <span>{cat.label}</span>
+                            <span>{cat}</span>
                             {active && <Check size={14} />}
                           </button>
                         );
@@ -474,7 +541,9 @@ export const Shop = () => {
                             setMobileFilterOpen(false);
                           }}
                           className={`py-2 text-xs font-bold uppercase tracking-wider border ${
-                            selectedSize === sz ? 'bg-white text-black border-white' : 'bg-[#141414] text-zinc-400 border-zinc-800'
+                            selectedSize === sz
+                              ? 'bg-white text-black border-white'
+                              : 'bg-[#141414] text-zinc-400 border-zinc-800'
                           }`}
                         >
                           {sz}

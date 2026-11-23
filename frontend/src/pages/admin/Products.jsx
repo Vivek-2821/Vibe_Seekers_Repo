@@ -17,6 +17,11 @@ import {
 } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { resolveImageUrl } from '../../utils/imageUrl';
+import {
+  CANONICAL_CATEGORIES,
+  normalizeCategory,
+  formatCategoryLabel,
+} from '../../utils/categories';
 
 export const Products = () => {
   const [products, setProducts] = useState([]);
@@ -30,11 +35,12 @@ export const Products = () => {
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
   const [successToast, setSuccessToast] = useState('');
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
 
   // Form Fields
   const [formData, setFormData] = useState({
     name: '',
-    category: 'TSHIRTS',
+    category: 'T-Shirts',
     price: '',
     mrp: '',
     discountPercent: '',
@@ -82,9 +88,10 @@ export const Products = () => {
 
   const openCreateModal = () => {
     setEditingId(null);
+    setIsCustomCategory(false);
     setFormData({
       name: '',
-      category: 'TSHIRTS',
+      category: 'T-Shirts',
       price: '',
       mrp: '',
       discountPercent: '',
@@ -115,9 +122,15 @@ export const Products = () => {
       ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
       : '');
 
+    const formattedCat = formatCategoryLabel(product.category) || product.category || 'T-Shirts';
+    const isCustom = !CANONICAL_CATEGORIES.some(
+      (c) => normalizeCategory(c) === normalizeCategory(formattedCat)
+    );
+    setIsCustomCategory(isCustom);
+
     setFormData({
       name: product.name,
-      category: product.category,
+      category: formattedCat,
       price: product.price,
       mrp: product.mrp || '',
       discountPercent: calculatedDiscount,
@@ -131,7 +144,7 @@ export const Products = () => {
       bestSeller: product.bestSeller ?? product.isBestSeller ?? false,
       isBestSeller: product.bestSeller ?? product.isBestSeller ?? false,
       active: product.active ?? product.isActive ?? true,
-      customizable: product.customizable ?? product.isCustomizable ?? (product.category === 'CUSTOMIZE_TSHIRTS'),
+      customizable: product.customizable ?? product.isCustomizable ?? (normalizeCategory(product.category) === 'customizetshirt'),
     });
 
     const stockMap = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
@@ -296,7 +309,7 @@ export const Products = () => {
         isBestSeller: formData.bestSeller ?? formData.isBestSeller ?? false,
         active: formData.active ?? formData.isActive ?? true,
         isActive: formData.active ?? formData.isActive ?? true,
-        customizable: (formData.customizable || formData.category === 'CUSTOMIZE_TSHIRTS') ?? false,
+        customizable: (formData.customizable || normalizeCategory(formData.category) === 'customizetshirt') ?? false,
         sizeStocks: sizeStockArray,
         existingImages: existingImages.map((img, idx) => ({
           id: img.id,
@@ -360,8 +373,12 @@ export const Products = () => {
   };
 
   const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !filterCategory || p.category === filterCategory;
+    const matchesSearch = p.name ? p.name.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+    const matchesCategory =
+      !filterCategory ||
+      filterCategory === 'All' ||
+      normalizeCategory(filterCategory) === 'all' ||
+      normalizeCategory(p.category) === normalizeCategory(filterCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -408,19 +425,25 @@ export const Products = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {['', 'TSHIRTS', 'CUSTOMIZE_TSHIRTS', 'HOODIES', 'JACKETS', 'SHIRTS'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilterCategory(cat)}
-              className={`px-3 py-2 text-xs font-bold uppercase rounded-lg border transition-all ${
-                filterCategory === cat
-                  ? 'bg-vibe-accent text-white border-vibe-accent'
-                  : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
-              }`}
-            >
-              {cat === '' ? 'All' : cat === 'CUSTOMIZE_TSHIRTS' ? 'Customize Tees' : cat === 'SHIRTS' ? 'Shirts' : cat}
-            </button>
-          ))}
+          {['All', ...CANONICAL_CATEGORIES].map((cat) => {
+            const isSelected =
+              (!filterCategory || filterCategory === 'All' || normalizeCategory(filterCategory) === 'all')
+                ? cat === 'All'
+                : normalizeCategory(filterCategory) === normalizeCategory(cat);
+            return (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat === 'All' ? '' : cat)}
+                className={`px-3 py-2 text-xs font-bold uppercase rounded-lg border transition-all ${
+                  isSelected
+                    ? 'bg-vibe-accent text-white border-vibe-accent'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -464,7 +487,7 @@ export const Products = () => {
 
                     <td className="py-4 px-4">
                       <span className="px-2.5 py-1 bg-zinc-800 text-zinc-300 rounded text-[10px] font-bold uppercase tracking-wider">
-                        {p.category}
+                        {formatCategoryLabel(p.category) || p.category}
                       </span>
                     </td>
 
@@ -597,16 +620,41 @@ export const Products = () => {
                     Category *
                   </label>
                   <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    value={
+                      CANONICAL_CATEGORIES.some(
+                        (c) => normalizeCategory(c) === normalizeCategory(formData.category)
+                      )
+                        ? CANONICAL_CATEGORIES.find(
+                            (c) => normalizeCategory(c) === normalizeCategory(formData.category)
+                          )
+                        : 'CUSTOM'
+                    }
+                    onChange={(e) => {
+                      if (e.target.value === 'CUSTOM') {
+                        setIsCustomCategory(true);
+                      } else {
+                        setIsCustomCategory(false);
+                        setFormData({ ...formData, category: e.target.value });
+                      }
+                    }}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-vibe-accent"
                   >
-                    <option value="TSHIRTS">T-Shirts (Oversized Tees)</option>
-                    <option value="CUSTOMIZE_TSHIRTS">Customize T-Shirts (Custom Print & Text)</option>
-                    <option value="HOODIES">Hoodies (Fleece)</option>
-                    <option value="JACKETS">Jackets (Cargo / Coach)</option>
-                    <option value="SHIRTS">Shirts (Cuban / Oversized Shirts)</option>
+                    {CANONICAL_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                    <option value="CUSTOM">+ Custom Category...</option>
                   </select>
+                  {isCustomCategory && (
+                    <input
+                      type="text"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      placeholder="Enter custom category name..."
+                      className="mt-2 w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-vibe-accent"
+                    />
+                  )}
                 </div>
 
                 <div>
@@ -921,7 +969,7 @@ export const Products = () => {
                 <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-white">
                   <input
                     type="checkbox"
-                    checked={formData.customizable || formData.category === 'CUSTOMIZE_TSHIRTS'}
+                    checked={formData.customizable || normalizeCategory(formData.category) === 'customizetshirt'}
                     onChange={(e) => setFormData({ ...formData, customizable: e.target.checked })}
                     className="h-4 w-4 rounded border-zinc-700 text-vibe-accent focus:ring-vibe-accent"
                   />

@@ -203,4 +203,19 @@ public class JacksonDtoMappingTest {
         assertEquals(1, dto.getExistingImages().size());
         assertEquals("https://res.cloudinary.com/test/cargo.jpg", dto.getExistingImages().get(0).getImageUrl());
     }
+
+    @Test
+    public void testProductCategoryNormalization() throws Exception {
+        assertEquals(com.vibeseekers.entity.ProductCategory.TSHIRTS, com.vibeseekers.entity.ProductCategory.fromString("T-Shirts"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.TSHIRTS, com.vibeseekers.entity.ProductCategory.fromString("T-Shirt"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.TSHIRTS, com.vibeseekers.entity.ProductCategory.fromString("tshirt"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.HOODIES, com.vibeseekers.entity.ProductCategory.fromString("Hoodies"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.HOODIES, com.vibeseekers.entity.ProductCategory.fromString("Hoodie"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.JACKETS, com.vibeseekers.entity.ProductCategory.fromString("Jackets"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.SHIRTS, com.vibeseekers.entity.ProductCategory.fromString("Shirts"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.SHIRTS, com.vibeseekers.entity.ProductCategory.fromString("Shirt"));
+        assertEquals(com.vibeseekers.entity.ProductCategory.CUSTOMIZE_TSHIRTS, com.vibeseekers.entity.ProductCategory.fromString("Customize T-Shirts"));
+        assertNull(com.vibeseekers.entity.ProductCategory.fromString("All"));
+        assertNull(com.vibeseekers.entity.ProductCategory.fromString(""));
+    }
 }
