@@ -40,8 +40,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password, isAdmin = false) => {
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
     const endpoint = isAdmin ? '/api/auth/admin-login' : '/api/auth/login';
-    const res = await axiosInstance.post(endpoint, { email, password });
+    const res = await axiosInstance.post(endpoint, { email: cleanEmail, password });
     const authData = res.data.data;
     saveAuthSession(authData);
     return authData;

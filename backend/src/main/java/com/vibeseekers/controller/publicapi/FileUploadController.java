@@ -27,6 +27,7 @@ public class FileUploadController {
         MediaStorageService.UploadResult result = mediaStorageService.storeFile(file, folder);
         Map<String, String> response = new HashMap<>();
         response.put("url", result.getUrl());
+        response.put("secure_url", result.getUrl());
         response.put("publicId", result.getPublicId());
         return ResponseEntity.ok(ApiResponse.ok("File uploaded successfully", response));
     }

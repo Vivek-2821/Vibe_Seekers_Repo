@@ -103,13 +103,14 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest request, boolean adminOnly) {
-        String email = request.getEmail().toLowerCase().trim();
+        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+        String rawPassword = request.getPassword() != null ? request.getPassword().trim() : "";
 
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, request.getPassword())
+                new UsernamePasswordAuthenticationToken(email, rawPassword)
         );
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
         if (!user.isVerified()) {

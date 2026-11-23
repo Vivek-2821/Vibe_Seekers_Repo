@@ -30,7 +30,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@PreAuthorize("hasAnyAuthority('ADMIN', 'ROLE_ADMIN')")
 public class AdminController {
 
     private final ProductService productService;

@@ -66,7 +66,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/upload/**").permitAll()
 
                         // Admin restricted endpoints
-                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
                         // Customer / Authenticated endpoints
                         .requestMatchers(

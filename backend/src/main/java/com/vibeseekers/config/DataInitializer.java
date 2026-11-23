@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Component
+@org.springframework.context.annotation.Lazy(false)
 public class DataInitializer implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
@@ -73,18 +74,26 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedAdminUser() {
-        if (!userRepository.existsByEmail(adminEmail.toLowerCase().trim())) {
-            User admin = new User(
-                    adminEmail.toLowerCase().trim(),
-                    passwordEncoder.encode(adminPassword),
-                    adminName,
-                    "+91 9860498749",
-                    Role.ROLE_ADMIN,
-                    true
-            );
-            userRepository.save(admin);
-            log.info("Initialized default administrator account: {}", adminEmail);
-        }
+        String email = (adminEmail != null ? adminEmail : "vibeseekers09@gmail.com").trim().toLowerCase();
+        String rawPassword = (adminPassword != null ? adminPassword : "Admin@Vibe2026!").trim();
+        String name = (adminName != null ? adminName : "Vivek Ashok Matne").trim();
+
+        User admin = userRepository.findByEmailIgnoreCase(email).orElseGet(() -> {
+            User u = new User();
+            u.setEmail(email);
+            u.setFullName(name);
+            u.setPhone("+91 9860498749");
+            return u;
+        });
+
+        admin.setEmail(email);
+        admin.setFullName(name);
+        admin.setPassword(passwordEncoder.encode(rawPassword));
+        admin.setRole(Role.ROLE_ADMIN);
+        admin.setVerified(true);
+        userRepository.save(admin);
+
+        log.info("Admin credentials synced for {}", email);
     }
 
     private void seedStoreSettings() {
@@ -101,37 +110,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedSampleProducts() {
         if (productRepository.count() > 0) {
-            // Enrich existing products with best-seller flags and luxury attributes
-            List<Product> existing = productRepository.findAll();
-            for (Product p : existing) {
-                boolean changed = false;
-                if (p.getColors() == null || p.getColors().isEmpty()) {
-                    p.setColors("Acid Black, Vintage White, Washed Charcoal");
-                    changed = true;
-                }
-                if (p.getGsm() == null || p.getGsm().isEmpty()) {
-                    p.setGsm(p.getCategory() == ProductCategory.HOODIES ? "420 GSM Luxury Heavyweight Fleece" :
-                             (p.getCategory() == ProductCategory.JACKETS ? "380 GSM Japanese Twill" : "240 GSM Combed Luxury Cotton"));
-                    changed = true;
-                }
-                if (p.getWashingInstructions() == null || p.getWashingInstructions().isEmpty()) {
-                    p.setWashingInstructions("Cold gentle machine wash inside out with dark colors. Do not bleach. Hang dry in shade. Do not iron directly on graphics.");
-                    changed = true;
-                }
-                if (p.getCollectionName() == null || p.getCollectionName().isEmpty()) {
-                    p.setCollectionName("Underground Genesis Drop 01");
-                    changed = true;
-                }
-                if (p.isBestSeller() == null || !p.isBestSeller()) {
-                    if (p.getSlug() != null && (p.getSlug().contains("glyph") || p.getSlug().contains("tokyo") || p.getSlug().contains("hoodie") || p.getSlug().contains("fleece"))) {
-                        p.setBestSeller(true);
-                        changed = true;
-                    }
-                }
-                if (changed) {
-                    productRepository.save(p);
-                }
-            }
+            log.info("Database already contains {} streetwear products. Preserving existing vault catalog without modifications.", productRepository.count());
             return;
         }
 

@@ -21,13 +21,25 @@ export const AdminLogin = () => {
     setError('');
 
     try {
-      await login(email, password, true);
+      const cleanEmail = email.trim().toLowerCase();
+      await login(cleanEmail, password, true);
       navigate(redirectPath, { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        'Authentication failed. Ensure you have administrator permissions.'
-      );
+      if (
+        err.code === 'ECONNABORTED' ||
+        !err.response ||
+        err.message?.includes('Network Error') ||
+        err.response?.status === 504 ||
+        err.response?.status === 502 ||
+        err.response?.status === 503
+      ) {
+        setError('Server is waking up, please try again in 30 seconds.');
+      } else {
+        setError(
+          err.response?.data?.message ||
+          'Authentication failed. Ensure you have administrator permissions.'
+        );
+      }
     } finally {
       setLoading(false);
     }
