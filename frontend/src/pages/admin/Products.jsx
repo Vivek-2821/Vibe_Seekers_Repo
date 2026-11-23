@@ -98,6 +98,7 @@ export const Products = () => {
       bestSeller: false,
       isBestSeller: false,
       active: true,
+      isActive: true,
       customizable: false,
     });
     setSizeStocks({ S: 10, M: 20, L: 25, XL: 15, XXL: 8 });
@@ -407,7 +408,7 @@ export const Products = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {['', 'TSHIRTS', 'CUSTOMIZE_TSHIRTS', 'HOODIES', 'JACKETS'].map((cat) => (
+          {['', 'TSHIRTS', 'CUSTOMIZE_TSHIRTS', 'HOODIES', 'JACKETS', 'SHIRTS'].map((cat) => (
             <button
               key={cat}
               onClick={() => setFilterCategory(cat)}
@@ -417,7 +418,7 @@ export const Products = () => {
                   : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
               }`}
             >
-              {cat === '' ? 'All' : cat === 'CUSTOMIZE_TSHIRTS' ? 'Customize Tees' : cat}
+              {cat === '' ? 'All' : cat === 'CUSTOMIZE_TSHIRTS' ? 'Customize Tees' : cat === 'SHIRTS' ? 'Shirts' : cat}
             </button>
           ))}
         </div>
@@ -604,6 +605,7 @@ export const Products = () => {
                     <option value="CUSTOMIZE_TSHIRTS">Customize T-Shirts (Custom Print & Text)</option>
                     <option value="HOODIES">Hoodies (Fleece)</option>
                     <option value="JACKETS">Jackets (Cargo / Coach)</option>
+                    <option value="SHIRTS">Shirts (Cuban / Oversized Shirts)</option>
                   </select>
                 </div>
 

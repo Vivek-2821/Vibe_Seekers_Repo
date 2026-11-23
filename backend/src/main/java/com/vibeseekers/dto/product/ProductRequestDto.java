@@ -51,7 +51,7 @@ public class ProductRequestDto {
 
     @JsonProperty("active")
     @JsonAlias({"isActive", "active"})
-    private boolean active = true;
+    private Boolean active = true;
 
     @JsonProperty("customizable")
     @JsonAlias({"isCustomizable", "customizable"})
@@ -171,11 +171,15 @@ public class ProductRequestDto {
     }
 
     public boolean isActive() {
-        return active;
+        return active != null ? active : true;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public Boolean getActive() {
+        return active != null ? active : true;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active != null ? active : true;
     }
 
     public boolean isCustomizable() {

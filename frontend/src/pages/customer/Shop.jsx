@@ -25,22 +25,29 @@ export const Shop = () => {
   const maxPrice = searchParams.get('maxPrice') || '';
 
   const categories = [
-    { label: 'All Streetwear', value: '' },
-    { label: 'Oversized T-Shirts', value: 'TSHIRTS' },
+    { label: 'All', value: '' },
+    { label: 'T-Shirts', value: 'TSHIRTS' },
     { label: 'Customize T-Shirts', value: 'CUSTOMIZE_TSHIRTS' },
-    { label: 'Fleece Hoodies', value: 'HOODIES' },
-    { label: 'Urban Jackets', value: 'JACKETS' },
+    { label: 'Hoodies', value: 'HOODIES' },
+    { label: 'Jackets', value: 'JACKETS' },
+    { label: 'Shirts', value: 'SHIRTS' },
   ];
 
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
   const popularColors = ['Black', 'White', 'Acid', 'Grey', 'Olive', 'Charcoal'];
+
+  const isCategorySelected = (catVal) => {
+    if (!selectedCategory && !catVal) return true;
+    if (!selectedCategory || !catVal) return false;
+    return selectedCategory.trim().toUpperCase() === catVal.trim().toUpperCase();
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
         const params = {
-          category: selectedCategory || undefined,
+          category: selectedCategory ? selectedCategory.trim().toUpperCase() : undefined,
           size: selectedSize || undefined,
           color: selectedColor || undefined,
           keyword: searchQuery || undefined,
@@ -53,14 +60,14 @@ export const Shop = () => {
           pageSize: 60,
         };
 
-        const res = await axiosInstance.get('/api/public/products', { params });
+        const res = await axiosInstance.get('/api/products', { params });
         const data = res.data?.data || res.data || {};
         let content = Array.isArray(data) ? data : (Array.isArray(data.content) ? data.content : []);
 
         // Fallback: If keyword search produced 0 direct SQL results, apply smart similar-word matching on all catalog items
         if (searchQuery && content.length === 0) {
           try {
-            const allRes = await axiosInstance.get('/api/public/products?pageSize=100');
+            const allRes = await axiosInstance.get('/api/products?pageSize=100');
             const allData = allRes.data?.data || allRes.data || {};
             const allItems = Array.isArray(allData) ? allData : (Array.isArray(allData.content) ? allData.content : []);
             content = smartProductSearch(allItems, searchQuery);
@@ -112,7 +119,7 @@ export const Shop = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
         {/* Header & Page Title */}
-        <div className="border-b border-zinc-800 pb-8 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="border-b border-zinc-800 pb-8 mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
               <span>VAULT CATALOG</span>
@@ -121,7 +128,7 @@ export const Shop = () => {
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white mt-1">
               {selectedCategory
-                ? categories.find((c) => c.value === selectedCategory)?.label
+                ? categories.find((c) => isCategorySelected(c.value))?.label || selectedCategory
                 : filterType === 'new'
                   ? 'NEW ARRIVALS'
                   : filterType === 'bestseller'
@@ -160,6 +167,26 @@ export const Shop = () => {
           </div>
         </div>
 
+        {/* Horizontal Category Filter Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 border-b border-zinc-800/60 no-scrollbar">
+          {categories.map((cat) => {
+            const active = isCategorySelected(cat.value);
+            return (
+              <button
+                key={cat.value || 'all'}
+                onClick={() => updateFilter('category', cat.value)}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border ${
+                  active
+                    ? 'bg-white text-black border-white shadow-md'
+                    : 'bg-[#141414] text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Active Filter Badges */}
         {hasActiveFilters && (
           <div className="flex flex-wrap items-center gap-2 mb-8 p-3 bg-[#111] border border-zinc-800/80">
@@ -168,7 +195,7 @@ export const Shop = () => {
             </span>
             {selectedCategory && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
-                Category: {selectedCategory}
+                Category: {categories.find((c) => isCategorySelected(c.value))?.label || selectedCategory}
                 <button onClick={() => updateFilter('category', '')}><X size={12} /></button>
               </span>
             )}
@@ -216,19 +243,23 @@ export const Shop = () => {
                 Garment Category
               </h4>
               <div className="space-y-1.5">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.value}
-                    onClick={() => updateFilter('category', cat.value)}
-                    className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${selectedCategory === cat.value
-                      ? 'bg-white text-black font-bold'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                {categories.map((cat) => {
+                  const active = isCategorySelected(cat.value);
+                  return (
+                    <button
+                      key={cat.value || 'all'}
+                      onClick={() => updateFilter('category', cat.value)}
+                      className={`w-full text-left text-xs font-medium uppercase tracking-wider py-1.5 px-2 flex items-center justify-between transition-colors ${
+                        active
+                          ? 'bg-white text-black font-bold'
+                          : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                       }`}
-                  >
-                    <span>{cat.label}</span>
-                    {selectedCategory === cat.value && <Check size={14} />}
-                  </button>
-                ))}
+                    >
+                      <span>{cat.label}</span>
+                      {active && <Check size={14} />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -379,6 +410,95 @@ export const Shop = () => {
           </main>
 
         </div>
+
+        {/* Mobile Filters Drawer Modal */}
+        <AnimatePresence>
+          {mobileFilterOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden flex">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileFilterOpen(false)}
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'tween', duration: 0.3 }}
+                className="relative ml-auto w-full max-w-xs bg-[#111] h-full p-6 overflow-y-auto border-l border-zinc-800 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-6">
+                    <span className="text-sm font-black uppercase tracking-wider text-white">Filter Vault</span>
+                    <button onClick={() => setMobileFilterOpen(false)} className="text-zinc-400 hover:text-white">
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  {/* Category in Mobile */}
+                  <div className="mb-6">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Category</h4>
+                    <div className="space-y-1">
+                      {categories.map((cat) => {
+                        const active = isCategorySelected(cat.value);
+                        return (
+                          <button
+                            key={cat.value || 'all'}
+                            onClick={() => {
+                              updateFilter('category', cat.value);
+                              setMobileFilterOpen(false);
+                            }}
+                            className={`w-full text-left text-xs font-medium uppercase tracking-wider py-2 px-2 flex items-center justify-between ${
+                              active ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            <span>{cat.label}</span>
+                            {active && <Check size={14} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Sizes in Mobile */}
+                  <div className="mb-6">
+                    <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Sizes</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {sizes.map((sz) => (
+                        <button
+                          key={sz}
+                          onClick={() => {
+                            updateFilter('size', selectedSize === sz ? '' : sz);
+                            setMobileFilterOpen(false);
+                          }}
+                          className={`py-2 text-xs font-bold uppercase tracking-wider border ${
+                            selectedSize === sz ? 'bg-white text-black border-white' : 'bg-[#141414] text-zinc-400 border-zinc-800'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-zinc-800">
+                  <button
+                    onClick={() => {
+                      clearAllFilters();
+                      setMobileFilterOpen(false);
+                    }}
+                    className="w-full py-3 bg-zinc-900 border border-zinc-800 text-xs font-bold uppercase tracking-wider text-white"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

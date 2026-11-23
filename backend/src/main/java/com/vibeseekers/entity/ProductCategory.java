@@ -6,7 +6,8 @@ public enum ProductCategory {
     TSHIRTS,
     HOODIES,
     JACKETS,
-    CUSTOMIZE_TSHIRTS;
+    CUSTOMIZE_TSHIRTS,
+    SHIRTS;
 
     @JsonCreator
     public static ProductCategory fromString(String value) {
@@ -17,6 +18,9 @@ public enum ProductCategory {
         if (clean.equals("CUSTOM") || clean.equals("CUSTOMIZE") || clean.equals("CUSTOM_TSHIRTS")
                 || clean.equals("CUSTOMIZED_TSHIRTS")) {
             return CUSTOMIZE_TSHIRTS;
+        }
+        if (clean.equals("SHIRT") || clean.equals("SHIRTS")) {
+            return SHIRTS;
         }
         for (ProductCategory category : values()) {
             if (category.name().equalsIgnoreCase(clean)) {

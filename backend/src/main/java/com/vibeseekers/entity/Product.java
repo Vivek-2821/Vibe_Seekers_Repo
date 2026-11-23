@@ -54,8 +54,8 @@ public class Product {
 
     private String collectionName; // e.g. "Monochrome Drop 01", "Winter Cargo '26"
 
-    @Column(nullable = false)
-    private boolean isActive = true;
+    @Column(name = "is_active", columnDefinition = "boolean default true")
+    private Boolean isActive = true;
 
     @Column(nullable = false)
     private boolean isCustomizable = false;
@@ -75,11 +75,17 @@ public class Product {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (isActive == null) {
+            isActive = true;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        if (isActive == null) {
+            isActive = true;
+        }
     }
 
     public Product() {
@@ -215,12 +221,20 @@ public class Product {
         this.collectionName = collectionName;
     }
 
-    public boolean isActive() {
-        return isActive;
+    public Boolean getIsActive() {
+        return isActive != null ? isActive : true;
     }
 
-    public void setActive(boolean active) {
-        isActive = active;
+    public boolean isActive() {
+        return isActive != null ? isActive : true;
+    }
+
+    public void setActive(Boolean active) {
+        this.isActive = active != null ? active : true;
+    }
+
+    public void setIsActive(Boolean active) {
+        this.isActive = active != null ? active : true;
     }
 
     public boolean isCustomizable() {

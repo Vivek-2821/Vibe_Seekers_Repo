@@ -165,7 +165,7 @@ export const Home = () => {
               <ArrowRight size={16} />
             </Link>
             <Link
-              to="/shop?filter=new"
+              to="/shop"
               className="w-full sm:w-auto px-9 py-4 bg-black/80 hover:bg-zinc-900 border border-zinc-700 text-white font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center transition-colors backdrop-blur-md"
             >
               <span>EXPLORE COLLECTION</span>

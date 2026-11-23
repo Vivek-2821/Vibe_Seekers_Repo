@@ -49,15 +49,15 @@ public class ProductService {
             String sortBy,
             int page,
             int pageSize) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
         if ("price_asc".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.ASC, "price");
+            sort = Sort.by(Sort.Direction.ASC, "price").and(Sort.by(Sort.Direction.DESC, "id"));
         } else if ("price_desc".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.DESC, "price");
+            sort = Sort.by(Sort.Direction.DESC, "price").and(Sort.by(Sort.Direction.DESC, "id"));
         } else if ("popular".equalsIgnoreCase(sortBy) || "popularity".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.DESC, "isBestSeller").and(Sort.by(Sort.Direction.DESC, "createdAt"));
-        } else if ("newest".equalsIgnoreCase(sortBy)) {
-            sort = Sort.by(Sort.Direction.DESC, "createdAt");
+            sort = Sort.by(Sort.Direction.DESC, "isBestSeller").and(Sort.by(Sort.Direction.DESC, "createdAt")).and(Sort.by(Sort.Direction.DESC, "id"));
+        } else if ("newest".equalsIgnoreCase(sortBy) || sortBy == null || sortBy.trim().isEmpty()) {
+            sort = Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
         }
 
         Pageable pageable = PageRequest.of(page, pageSize, sort);
