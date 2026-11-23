@@ -61,4 +61,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Transactional
     @Query(value = "UPDATE products SET is_active = TRUE WHERE is_active IS NULL", nativeQuery = true)
     int updateNullIsActiveToTrue();
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE products SET category = 'TSHIRTS' WHERE category IS NULL", nativeQuery = true)
+    int updateNullCategoryToDefault();
 }

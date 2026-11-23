@@ -138,10 +138,11 @@ export const Footer = () => {
             <h5 className="font-bold text-white uppercase tracking-[0.2em] text-xs">COLLECTIONS</h5>
             <ul className="space-y-2 text-zinc-400 text-xs">
               <li><Link to="/shop" className="hover:text-white transition-colors">Shop All Drops</Link></li>
-              <li><Link to="/shop?category=CUSTOMIZE_TSHIRTS" className="hover:text-white transition-colors text-vibe-accent font-semibold">Customize T-Shirts</Link></li>
-              <li><Link to="/shop?category=TSHIRTS" className="hover:text-white transition-colors">Oversized Tees</Link></li>
-              <li><Link to="/shop?category=HOODIES" className="hover:text-white transition-colors">Heavyweight Hoodies</Link></li>
-              <li><Link to="/shop?category=JACKETS" className="hover:text-white transition-colors">Statement Jackets</Link></li>
+              <li><Link to="/shop?category=Customize T-Shirts" className="hover:text-white transition-colors text-vibe-accent font-semibold">Customize T-Shirts</Link></li>
+              <li><Link to="/shop?category=T-Shirts" className="hover:text-white transition-colors">Oversized Tees</Link></li>
+              <li><Link to="/shop?category=Hoodies" className="hover:text-white transition-colors">Heavyweight Hoodies</Link></li>
+              <li><Link to="/shop?category=Jackets" className="hover:text-white transition-colors">Statement Jackets</Link></li>
+              <li><Link to="/shop?category=Shirts" className="hover:text-white transition-colors">Cuban Shirts</Link></li>
               <li><Link to="/shop?filter=new" className="hover:text-white transition-colors">New Drops</Link></li>
               <li><Link to="/shop?filter=bestseller" className="hover:text-white transition-colors">Best Sellers</Link></li>
             </ul>

@@ -57,8 +57,36 @@ public class DataInitializer implements CommandLineRunner {
         seedAdminUser();
         seedStoreSettings();
         syncExistingProductsActiveStatus();
+        syncExistingProductsCategory();
         seedSampleProducts();
         seedCoupons();
+    }
+
+    private void syncExistingProductsCategory() {
+        try {
+            int updated = productRepository.updateNullCategoryToDefault();
+            if (updated > 0) {
+                log.info("Synced existing products in database: {} products with null category set to TSHIRTS.", updated);
+            }
+        } catch (Exception e) {
+            log.warn("Direct native update for null category failed ({}). Falling back to JPA entity sync.", e.getMessage());
+            try {
+                List<Product> products = productRepository.findAll();
+                int count = 0;
+                for (Product p : products) {
+                    if (p.getCategory() == null) {
+                        p.setCategory(ProductCategory.TSHIRTS);
+                        productRepository.save(p);
+                        count++;
+                    }
+                }
+                if (count > 0) {
+                    log.info("JPA entity sync complete: {} products updated to category = TSHIRTS.", count);
+                }
+            } catch (Exception ex) {
+                log.error("Could not sync products category: {}", ex.getMessage());
+            }
+        }
     }
 
     private void syncExistingProductsActiveStatus() {

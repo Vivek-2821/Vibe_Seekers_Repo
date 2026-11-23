@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X, SlidersHorizontal, ArrowUpDown, Check, RefreshCw } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
@@ -15,13 +15,13 @@ import {
 
 export const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const routeParams = useParams();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Active filter state from URL search params
-  const categoryParam = searchParams.get('category') || '';
   const selectedSize = searchParams.get('size') || '';
   const selectedColor = searchParams.get('color') || '';
   const searchQuery = searchParams.get('keyword') || '';
@@ -33,14 +33,18 @@ export const Shop = () => {
   // Extract dynamic categories from fetched products (starting with "All")
   const categories = useMemo(() => getDynamicCategories(products), [products]);
 
-  // Determine active category selection based on URL query param (defaults to "All")
-  const selectedCategory = useMemo(() => {
-    if (!categoryParam || normalizeCategory(categoryParam) === 'all') {
-      return 'All';
+  // Synchronized active category state driven by searchParams and routeParams
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  useEffect(() => {
+    const catParam = searchParams.get('category') || routeParams?.category || '';
+    if (!catParam || normalizeCategory(catParam) === 'all') {
+      setActiveCategory('All');
+    } else {
+      const match = categories.find((c) => normalizeCategory(c) === normalizeCategory(catParam));
+      setActiveCategory(match || formatCategoryLabel(catParam) || 'All');
     }
-    const match = categories.find((c) => normalizeCategory(c) === normalizeCategory(categoryParam));
-    return match || formatCategoryLabel(categoryParam) || 'All';
-  }, [categoryParam, categories]);
+  }, [searchParams, routeParams, categories]);
 
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
   const popularColors = ['Black', 'White', 'Acid', 'Grey', 'Olive', 'Charcoal'];
@@ -50,6 +54,7 @@ export const Shop = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
+        // Always fetch the full active catalog without restricting by ?category= on the backend
         const res = await axiosInstance.get('/api/products', {
           params: { pageSize: 120, sortBy: 'newest' },
         });
@@ -99,9 +104,10 @@ export const Shop = () => {
   const filteredProducts = useMemo(() => {
     let list = Array.isArray(products) ? [...products] : [];
 
-    // 1. Category filter: "All" displays every product without restriction
-    if (selectedCategory && selectedCategory !== 'All' && normalizeCategory(selectedCategory) !== 'all') {
-      list = list.filter((p) => matchCategory(p.category, selectedCategory));
+    // 1. Category filter: "All" displays every product without restriction;
+    // Specific category passes full product object into matchCategory with fallback to product.name
+    if (activeCategory && activeCategory !== 'All' && normalizeCategory(activeCategory) !== 'all') {
+      list = list.filter((p) => matchCategory(p, activeCategory));
     }
 
     // 2. Drop Type
@@ -154,10 +160,10 @@ export const Shop = () => {
     }
 
     return list;
-  }, [products, selectedCategory, filterType, selectedSize, selectedColor, minPrice, maxPrice, searchQuery, sortBy]);
+  }, [products, activeCategory, filterType, selectedSize, selectedColor, minPrice, maxPrice, searchQuery, sortBy]);
 
   const hasActiveFilters = !!(
-    (selectedCategory && selectedCategory !== 'All') ||
+    (activeCategory && activeCategory !== 'All') ||
     selectedSize ||
     selectedColor ||
     searchQuery ||
@@ -167,10 +173,10 @@ export const Shop = () => {
   );
 
   const isCatActive = (cat) => {
-    if (selectedCategory === 'All' || !selectedCategory) {
+    if (activeCategory === 'All' || !activeCategory) {
       return cat === 'All' || normalizeCategory(cat) === 'all';
     }
-    return normalizeCategory(selectedCategory) === normalizeCategory(cat);
+    return normalizeCategory(activeCategory) === normalizeCategory(cat);
   };
 
   return (
@@ -186,8 +192,8 @@ export const Shop = () => {
               {filterType === 'bestseller' && <span className="text-white font-extrabold">• BEST SELLERS</span>}
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white mt-1">
-              {selectedCategory && selectedCategory !== 'All'
-                ? selectedCategory
+              {activeCategory && activeCategory !== 'All'
+                ? activeCategory
                 : filterType === 'new'
                   ? 'NEW ARRIVALS'
                   : filterType === 'bestseller'
@@ -252,9 +258,9 @@ export const Shop = () => {
             <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mr-1">
               Active Filters:
             </span>
-            {selectedCategory && selectedCategory !== 'All' && (
+            {activeCategory && activeCategory !== 'All' && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 text-white text-[11px] font-bold uppercase tracking-wider">
-                Category: {selectedCategory}
+                Category: {activeCategory}
                 <button onClick={() => updateFilter('category', '')}><X size={12} /></button>
               </span>
             )}

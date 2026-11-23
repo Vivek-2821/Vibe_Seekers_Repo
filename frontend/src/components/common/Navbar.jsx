@@ -52,10 +52,11 @@ export const Navbar = () => {
 
   const navLinks = [
     { name: 'Shop All', path: '/shop' },
-    { name: 'Customize T-Shirts', path: '/shop?category=CUSTOMIZE_TSHIRTS' },
-    { name: 'T-Shirts', path: '/shop?category=TSHIRTS' },
-    { name: 'Hoodies', path: '/shop?category=HOODIES' },
-    { name: 'Jackets', path: '/shop?category=JACKETS' },
+    { name: 'Customize T-Shirts', path: '/shop?category=Customize T-Shirts' },
+    { name: 'T-Shirts', path: '/shop?category=T-Shirts' },
+    { name: 'Hoodies', path: '/shop?category=Hoodies' },
+    { name: 'Jackets', path: '/shop?category=Jackets' },
+    { name: 'Shirts', path: '/shop?category=Shirts' },
     { name: 'New Arrivals', path: '/shop?filter=new' },
     { name: 'Track Order', path: '/track-order' },
   ];

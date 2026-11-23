@@ -122,15 +122,31 @@ export const Products = () => {
       ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
       : '');
 
-    const formattedCat = formatCategoryLabel(product.category) || product.category || 'T-Shirts';
+    // Normalize category into canonical dropdown value or fall back to 'T-Shirts'
+    const rawCat = product.category || '';
+    let canonicalCat = 'T-Shirts';
+    if (rawCat) {
+      const match = CANONICAL_CATEGORIES.find(
+        (c) => normalizeCategory(c) === normalizeCategory(rawCat)
+      );
+      canonicalCat = match || formatCategoryLabel(rawCat) || 'T-Shirts';
+    } else if (product.name) {
+      const nameNorm = normalizeCategory(product.name);
+      if (nameNorm.includes('custom')) canonicalCat = 'Customize T-Shirts';
+      else if (nameNorm.includes('hoodie')) canonicalCat = 'Hoodies';
+      else if (nameNorm.includes('jacket')) canonicalCat = 'Jackets';
+      else if (nameNorm.includes('shirt') && !nameNorm.includes('tshirt')) canonicalCat = 'Shirts';
+      else canonicalCat = 'T-Shirts';
+    }
+
     const isCustom = !CANONICAL_CATEGORIES.some(
-      (c) => normalizeCategory(c) === normalizeCategory(formattedCat)
+      (c) => normalizeCategory(c) === normalizeCategory(canonicalCat)
     );
     setIsCustomCategory(isCustom);
 
     setFormData({
       name: product.name,
-      category: formattedCat,
+      category: canonicalCat,
       price: product.price,
       mrp: product.mrp || '',
       discountPercent: calculatedDiscount,
@@ -486,8 +502,12 @@ export const Products = () => {
                     </td>
 
                     <td className="py-4 px-4">
-                      <span className="px-2.5 py-1 bg-zinc-800 text-zinc-300 rounded text-[10px] font-bold uppercase tracking-wider">
-                        {formatCategoryLabel(p.category) || p.category}
+                      <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold uppercase tracking-wider border inline-block ${
+                        p.category
+                          ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      }`}>
+                        {formatCategoryLabel(p.category) || 'T-Shirts (Legacy)'}
                       </span>
                     </td>
 

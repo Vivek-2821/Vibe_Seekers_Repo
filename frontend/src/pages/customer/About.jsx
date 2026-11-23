@@ -109,7 +109,7 @@ export const About = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
-          <Link to="/shop?category=TSHIRTS" className="group block bg-[#121212] border border-zinc-800 p-6 hover:border-white transition-colors">
+          <Link to="/shop?category=T-Shirts" className="group block bg-[#121212] border border-zinc-800 p-6 hover:border-white transition-colors">
             <span className="text-xs font-bold uppercase text-zinc-500">CATEGORY 01</span>
             <h4 className="text-base font-black uppercase text-white mt-1">OVERSIZED TEES</h4>
             <p className="text-xs text-zinc-400 mt-2">240 GSM combed cotton, acid wash tones, boxy drop shoulders.</p>
@@ -118,7 +118,7 @@ export const About = () => {
             </span>
           </Link>
 
-          <Link to="/shop?category=HOODIES" className="group block bg-[#121212] border border-zinc-800 p-6 hover:border-white transition-colors">
+          <Link to="/shop?category=Hoodies" className="group block bg-[#121212] border border-zinc-800 p-6 hover:border-white transition-colors">
             <span className="text-xs font-bold uppercase text-zinc-500">CATEGORY 02</span>
             <h4 className="text-base font-black uppercase text-white mt-1">FLEECE HOODIES</h4>
             <p className="text-xs text-zinc-400 mt-2">400 GSM heavyweight brushed interior, double-layered hood.</p>
@@ -127,7 +127,7 @@ export const About = () => {
             </span>
           </Link>
 
-          <Link to="/shop?category=JACKETS" className="group block bg-[#121212] border border-zinc-800 p-6 hover:border-white transition-colors">
+          <Link to="/shop?category=Jackets" className="group block bg-[#121212] border border-zinc-800 p-6 hover:border-white transition-colors">
             <span className="text-xs font-bold uppercase text-zinc-500">CATEGORY 03</span>
             <h4 className="text-base font-black uppercase text-white mt-1">STATEMENT JACKETS</h4>
             <p className="text-xs text-zinc-400 mt-2">Cargo details, utility hardware, and corduroy textures.</p>

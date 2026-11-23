@@ -107,7 +107,24 @@ public class ProductService {
         Product product = new Product();
         product.setName(request.getName().trim());
         product.setSlug(generateUniqueSlug(request.getName()));
-        product.setCategory(request.getCategory());
+        ProductCategory cat = request.getCategory();
+        if (cat == null && request.getName() != null) {
+            String n = request.getName().toLowerCase();
+            if (n.contains("custom")) {
+                cat = ProductCategory.CUSTOMIZE_TSHIRTS;
+            } else if (n.contains("tshirt") || n.contains("tee") || n.contains("t-shirt") || n.contains("t shirt")) {
+                cat = ProductCategory.TSHIRTS;
+            } else if (n.contains("hoodie") || n.contains("hoody") || n.contains("fleece") || n.contains("sweatshirt")) {
+                cat = ProductCategory.HOODIES;
+            } else if (n.contains("jacket") || n.contains("bomber") || n.contains("coat")) {
+                cat = ProductCategory.JACKETS;
+            } else if (n.contains("shirt")) {
+                cat = ProductCategory.SHIRTS;
+            } else {
+                cat = ProductCategory.TSHIRTS;
+            }
+        }
+        product.setCategory(cat != null ? cat : ProductCategory.TSHIRTS);
         product.setPrice(request.getPrice());
         product.setMrp(request.getMrp());
         if (request.getMrp() != null && request.getPrice() != null
@@ -168,7 +185,22 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         product.setName(request.getName().trim());
-        product.setCategory(request.getCategory());
+        ProductCategory updateCat = request.getCategory();
+        if (updateCat == null && request.getName() != null) {
+            String n = request.getName().toLowerCase();
+            if (n.contains("custom")) {
+                updateCat = ProductCategory.CUSTOMIZE_TSHIRTS;
+            } else if (n.contains("tshirt") || n.contains("tee") || n.contains("t-shirt") || n.contains("t shirt")) {
+                updateCat = ProductCategory.TSHIRTS;
+            } else if (n.contains("hoodie") || n.contains("hoody") || n.contains("fleece") || n.contains("sweatshirt")) {
+                updateCat = ProductCategory.HOODIES;
+            } else if (n.contains("jacket") || n.contains("bomber") || n.contains("coat")) {
+                updateCat = ProductCategory.JACKETS;
+            } else if (n.contains("shirt")) {
+                updateCat = ProductCategory.SHIRTS;
+            }
+        }
+        product.setCategory(updateCat != null ? updateCat : (product.getCategory() != null ? product.getCategory() : ProductCategory.TSHIRTS));
         product.setPrice(request.getPrice());
         product.setMrp(request.getMrp());
         if (request.getMrp() != null && request.getPrice() != null
@@ -310,7 +342,24 @@ public class ProductService {
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setSlug(product.getSlug());
-        dto.setCategory(product.getCategory());
+        ProductCategory cat = product.getCategory();
+        if (cat == null && product.getName() != null) {
+            String n = product.getName().toLowerCase();
+            if (n.contains("custom")) {
+                cat = ProductCategory.CUSTOMIZE_TSHIRTS;
+            } else if (n.contains("tshirt") || n.contains("tee") || n.contains("t-shirt") || n.contains("t shirt")) {
+                cat = ProductCategory.TSHIRTS;
+            } else if (n.contains("hoodie") || n.contains("hoody") || n.contains("fleece") || n.contains("sweatshirt")) {
+                cat = ProductCategory.HOODIES;
+            } else if (n.contains("jacket") || n.contains("bomber") || n.contains("coat")) {
+                cat = ProductCategory.JACKETS;
+            } else if (n.contains("shirt")) {
+                cat = ProductCategory.SHIRTS;
+            } else {
+                cat = ProductCategory.TSHIRTS;
+            }
+        }
+        dto.setCategory(cat != null ? cat : ProductCategory.TSHIRTS);
         dto.setPrice(product.getPrice());
         dto.setMrp(product.getMrp());
         if (product.getDiscountPercent() != null && product.getDiscountPercent() > 0) {
