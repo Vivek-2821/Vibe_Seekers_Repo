@@ -5,7 +5,7 @@ import { Flame, ShieldCheck, Sparkles, MapPin, Award, ArrowRight, Mail, Phone, I
 export const About = () => {
   return (
     <div className="bg-[#080808] text-white min-h-screen">
-      
+
       {/* 1. Editorial Hero */}
       <section className="relative py-20 sm:py-28 border-b border-zinc-800 bg-[#0d0d0d] overflow-hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
@@ -25,7 +25,7 @@ export const About = () => {
       {/* 2. Our Story & Founder Narrative */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
+
           <div className="lg:col-span-6 aspect-[4/5] bg-zinc-950 border border-zinc-800 overflow-hidden">
             <img
               src="https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=1000&auto=format&fit=crop&q=80"
@@ -58,7 +58,7 @@ export const About = () => {
       {/* 3. Brand Philosophy & Our Vision */}
       <section className="bg-[#0e0e0e] border-y border-zinc-800 py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-          
+
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-400">
               PHILOSOPHY & VISION

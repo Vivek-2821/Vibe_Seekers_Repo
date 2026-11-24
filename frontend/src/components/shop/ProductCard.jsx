@@ -10,7 +10,7 @@ export const ProductCard = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState(() => {
     // Pick first available size with stock > 0 if available, else 'L'
     if (product.sizeStocks && product.sizeStocks.length > 0) {
-      const available = product.sizeStocks.find((s) => s.stockQuantity > 0);
+      const available = product.sizeStocks.find((s) => (s.stock ?? s.stockQuantity ?? 0) > 0);
       return available ? available.size : product.sizeStocks[0].size;
     }
     return 'L';
@@ -139,11 +139,11 @@ export const ProductCard = ({ product }) => {
           {/* Pricing */}
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-sm sm:text-base font-extrabold text-white tracking-wide">
-              ₹{Number(product.price).toLocaleString('en-IN')}
+              ₹{Number(product.price || 0).toLocaleString('en-IN')}
             </span>
             {product.mrp && Number(product.mrp) > Number(product.price) && (
               <span className="text-xs text-zinc-500 line-through font-normal">
-                ₹{Number(product.mrp).toLocaleString('en-IN')}
+                ₹{Number(product.mrp || 0).toLocaleString('en-IN')}
               </span>
             )}
           </div>

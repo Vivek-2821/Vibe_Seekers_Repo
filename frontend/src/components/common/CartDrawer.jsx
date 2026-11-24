@@ -64,7 +64,7 @@ export const CartDrawer = () => {
               <div className="flex items-center gap-3">
                 <ShoppingBag className="text-white" size={20} />
                 <h3 className="font-bold tracking-widest text-sm uppercase">
-                  Your Bag ({items.reduce((acc, i) => acc + i.quantity, 0)})
+                  Your Bag ({items.reduce((acc, i) => acc + (Number(i?.quantity) || 1), 0)})
                 </h3>
               </div>
               <button
@@ -161,11 +161,11 @@ export const CartDrawer = () => {
                         {/* Price */}
                         <div className="text-right">
                           <span className="text-sm font-bold text-white tracking-wide">
-                            ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                            ₹{(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('en-IN')}
                           </span>
-                          {item.mrp && item.mrp > item.price && (
+                          {item.mrp && Number(item.mrp) > Number(item.price) && (
                             <span className="block text-[10px] text-zinc-500 line-through">
-                              ₹{(item.mrp * item.quantity).toLocaleString('en-IN')}
+                              ₹{(Number(item.mrp || 0) * Number(item.quantity || 1)).toLocaleString('en-IN')}
                             </span>
                           )}
                         </div>
@@ -245,25 +245,25 @@ export const CartDrawer = () => {
                 <div className="space-y-1.5 text-xs text-zinc-300">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span className="font-medium text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+                    <span className="font-medium text-white">₹{Number(subtotal || 0).toLocaleString('en-IN')}</span>
                   </div>
-                  {discountAmount > 0 && (
+                  {Number(discountAmount || 0) > 0 && (
                     <div className="flex justify-between text-emerald-400">
                       <span>Discount</span>
-                      <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                      <span>-₹{Number(discountAmount || 0).toLocaleString('en-IN')}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    {shippingEstimate > 0 ? (
-                      <span className="font-bold text-white">₹{shippingEstimate.toLocaleString('en-IN')}</span>
+                    {Number(shippingEstimate || 0) > 0 ? (
+                      <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toLocaleString('en-IN')}</span>
                     ) : (
                       <span className="text-emerald-400 uppercase font-semibold">Free (₹0)</span>
                     )}
                   </div>
                   <div className="border-t border-zinc-800 pt-2 flex justify-between text-base font-bold text-white">
                     <span>Estimated Total</span>
-                    <span className="tracking-wide">₹{finalTotal.toLocaleString('en-IN')}</span>
+                    <span className="tracking-wide">₹{Number(finalTotal || 0).toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 

@@ -135,7 +135,7 @@ export const Cart = () => {
                       </span>
                     )}
                     <span>•</span>
-                    <span className="font-mono text-zinc-300">₹{item.price.toLocaleString('en-IN')} each</span>
+                    <span className="font-mono text-zinc-300">₹{Number(item.price || 0).toLocaleString('en-IN')} each</span>
                   </div>
 
                   {/* Customization Details Badge */}
@@ -196,11 +196,11 @@ export const Cart = () => {
 
                     <div className="text-right">
                       <span className="text-sm sm:text-base font-extrabold text-white">
-                        ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                        ₹{(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('en-IN')}
                       </span>
-                      {item.mrp && item.mrp > item.price && (
+                      {item.mrp && Number(item.mrp) > Number(item.price) && (
                         <span className="block text-[11px] text-zinc-500 line-through">
-                          ₹{(item.mrp * item.quantity).toLocaleString('en-IN')}
+                          ₹{(Number(item.mrp || 0) * Number(item.quantity || 1)).toLocaleString('en-IN')}
                         </span>
                       )}
                     </div>
@@ -280,25 +280,25 @@ export const Cart = () => {
               <div className="space-y-2.5 text-xs text-zinc-300 pt-2 border-t border-zinc-800/80">
                 <div className="flex justify-between">
                   <span>Bag Subtotal</span>
-                  <span className="font-bold text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-white">₹{Number(subtotal || 0).toLocaleString('en-IN')}</span>
                 </div>
-                {discountAmount > 0 && (
+                {Number(discountAmount || 0) > 0 && (
                   <div className="flex justify-between text-emerald-400">
                     <span>Coupon Discount</span>
-                    <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                    <span>-₹{Number(discountAmount || 0).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Express Courier Shipping</span>
-                  {shippingEstimate > 0 ? (
-                    <span className="font-bold text-white">₹{shippingEstimate.toLocaleString('en-IN')}</span>
+                  {Number(shippingEstimate || 0) > 0 ? (
+                    <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toLocaleString('en-IN')}</span>
                   ) : (
                     <span className="text-emerald-400 font-bold uppercase">FREE (₹0)</span>
                   )}
                 </div>
                 <div className="border-t border-zinc-800 pt-3 flex justify-between text-base font-black text-white">
                   <span>ESTIMATED TOTAL</span>
-                  <span className="tracking-wide">₹{finalTotal.toLocaleString('en-IN')}</span>
+                  <span className="tracking-wide">₹{Number(finalTotal || 0).toLocaleString('en-IN')}</span>
                 </div>
               </div>
 

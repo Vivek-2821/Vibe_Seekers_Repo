@@ -36,6 +36,9 @@ public class DataInitializer implements CommandLineRunner {
     private String adminName;
     private final com.vibeseekers.repository.CouponRepository couponRepository;
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     public DataInitializer(UserRepository userRepository,
                            ProductRepository productRepository,
                            ProductImageRepository productImageRepository,
@@ -54,12 +57,33 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        initOrderSchemaColumns();
         seedAdminUser();
         seedStoreSettings();
         syncExistingProductsActiveStatus();
         syncExistingProductsCategory();
         seedSampleProducts();
         seedCoupons();
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    protected void initOrderSchemaColumns() {
+        String[] alterStatements = new String[]{
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_charge NUMERIC(10,2) DEFAULT 0.00",
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS customization_placement VARCHAR(100)",
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_text VARCHAR(500)",
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_design_url VARCHAR(1000)"
+        };
+        for (String sql : alterStatements) {
+            try {
+                if (entityManager != null) {
+                    entityManager.createNativeQuery(sql).executeUpdate();
+                }
+            } catch (Exception e) {
+                // Table might not exist yet during first boot (Hibernate creates it) or syntax varies in H2
+                log.debug("Schema migration notice for {}: {}", sql, e.getMessage());
+            }
+        }
     }
 
     private void syncExistingProductsCategory() {

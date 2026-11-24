@@ -8,8 +8,21 @@ export const CartProvider = ({ children }) => {
   const [items, setItems] = useState(() => {
     try {
       const saved = localStorage.getItem('vibe_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((item) => item && (item.productId != null || item.id != null) && !isNaN(Number(item.price)))
+        .map((item) => ({
+          ...item,
+          productId: item.productId ?? item.id,
+          price: Number(item.price) || 0,
+          quantity: Math.max(1, Number(item.quantity) || 1),
+          size: String(item.size || 'M').toUpperCase(),
+          color: item.color ? String(item.color) : 'Classic Black',
+        }));
+    } catch (e) {
+      console.warn('Failed to parse cart from localStorage, resetting:', e);
       return [];
     }
   });
@@ -73,18 +86,63 @@ export const CartProvider = ({ children }) => {
   const closeCart = () => setIsCartOpen(false);
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
-  const addItem = (product, size = 'L', color = '', quantity = 1, customization = null) => {
-    const chosenColor = color || (product.colors ? product.colors.split(',')[0].trim() : 'Classic Black');
-    const chosenSize = (size || 'L').toUpperCase();
+  const addToCart = (product, optionsOrSize = {}, maybeColor = '', maybeQuantity = 1, maybeCustomization = null) => {
+    if (!product || typeof product !== 'object') {
+      console.warn('addToCart called without valid product object:', product);
+      return;
+    }
+
+    let size;
+    let color;
+    let quantity;
+    let customization;
+
+    if (optionsOrSize && typeof optionsOrSize === 'object' && !Array.isArray(optionsOrSize)) {
+      size = optionsOrSize.size;
+      color = optionsOrSize.color;
+      quantity = optionsOrSize.quantity;
+      customization = optionsOrSize.customization;
+    } else {
+      size = optionsOrSize;
+      color = maybeColor;
+      quantity = maybeQuantity;
+      customization = maybeCustomization;
+    }
+
+    // Default size: first size with stock > 0, or first size in sizeStocks, or 'M'
+    let defaultSize = 'M';
+    if (Array.isArray(product.sizeStocks) && product.sizeStocks.length > 0) {
+      const available = product.sizeStocks.find((s) => (s.stock ?? s.stockQuantity ?? 0) > 0);
+      defaultSize = available ? available.size : product.sizeStocks[0].size;
+    }
+    const chosenSize = String(size || defaultSize).toUpperCase();
+
+    // Default color: first color in product.colors, or 'Classic Black'
+    let defaultColor = 'Classic Black';
+    if (product.colors) {
+      const colorParts = String(product.colors).split(',').map((c) => c.trim()).filter(Boolean);
+      if (colorParts.length > 0) defaultColor = colorParts[0];
+    }
+    const chosenColor = color ? String(color).trim() : defaultColor;
+
+    const chosenQuantity = Math.max(1, Number(quantity) || 1);
 
     const customPlacement = customization?.placement || customization?.customizationPlacement || null;
     const customText = customization?.customText || customization?.text || null;
     const customDesignUrl = customization?.customDesignUrl || customization?.designUrl || null;
 
+    // Resolve product image safely
+    let rawImg = product.primaryImageUrl || product.imageUrl;
+    if (!rawImg && Array.isArray(product.images) && product.images.length > 0) {
+      rawImg = product.images[0]?.imageUrl || product.images[0]?.url || (typeof product.images[0] === 'string' ? product.images[0] : null);
+    }
+    const resolvedImg = resolveImageUrl(rawImg, '/assets/logo.png');
+
     setItems((prevItems) => {
+      const prodId = product.id ?? product.productId;
       const existingIndex = prevItems.findIndex(
         (item) =>
-          item.productId === product.id &&
+          item.productId === prodId &&
           item.size === chosenSize &&
           item.color === chosenColor &&
           (item.customText || '') === (customText || '') &&
@@ -93,32 +151,34 @@ export const CartProvider = ({ children }) => {
 
       if (existingIndex > -1) {
         const updated = [...prevItems];
-        updated[existingIndex].quantity += quantity;
+        updated[existingIndex].quantity = (Number(updated[existingIndex].quantity) || 0) + chosenQuantity;
         return updated;
       }
 
       return [
         ...prevItems,
         {
-          productId: product.id,
-          name: product.name,
-          slug: product.slug,
-          price: Number(product.price),
+          productId: prodId,
+          name: product.name || 'Vibe Streetwear',
+          slug: product.slug || String(prodId),
+          price: Math.max(0, Number(product.price) || 0),
           mrp: product.mrp ? Number(product.mrp) : null,
-          category: product.category,
+          category: product.category || 'Streetwear',
           size: chosenSize,
           color: chosenColor,
-          quantity,
+          quantity: chosenQuantity,
           customizationPlacement: customPlacement,
           customText: customText,
           customDesignUrl: customDesignUrl,
-          imageUrl: resolveImageUrl(product.primaryImageUrl || product.imageUrl || (product.images?.[0]?.imageUrl ?? product.images?.[0]?.url ?? '')),
+          imageUrl: resolvedImg,
         },
       ];
     });
 
     openCart();
   };
+
+  const addItem = addToCart;
 
   const updateQuantity = (productId, size, color, newQty) => {
     if (newQty <= 0) {
@@ -128,7 +188,7 @@ export const CartProvider = ({ children }) => {
     setItems((prevItems) =>
       prevItems.map((item) =>
         item.productId === productId && item.size === size && (item.color || '') === (color || '')
-          ? { ...item, quantity: newQty }
+          ? { ...item, quantity: Math.max(1, Number(newQty) || 1) }
           : item
       )
     );
@@ -148,8 +208,8 @@ export const CartProvider = ({ children }) => {
     setAppliedCoupon(null);
   };
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const subtotal = items.reduce((acc, item) => acc + (Number(item?.price) || 0) * (Number(item?.quantity) || 1), 0);
+  const itemCount = items.reduce((acc, item) => acc + (Number(item?.quantity) || 1), 0);
   const shippingEstimate = shippingConfig.shippingEnabled
     ? (Number(shippingConfig.shippingAmount) || 79.0)
     : 0;
@@ -161,15 +221,15 @@ export const CartProvider = ({ children }) => {
       // Order amount dropped below threshold
       discountAmount = 0;
     } else {
-      let disc = Math.round((subtotal * appliedCoupon.discountPercent) / 100);
+      let disc = Math.round((subtotal * (Number(appliedCoupon.discountPercent) || 0)) / 100);
       if (appliedCoupon.maxDiscountAmount && disc > appliedCoupon.maxDiscountAmount) {
-        disc = appliedCoupon.maxDiscountAmount;
+        disc = Number(appliedCoupon.maxDiscountAmount);
       }
       discountAmount = disc;
     }
   }
 
-  const finalTotal = Math.max(0, subtotal - discountAmount + shippingEstimate);
+  const finalTotal = Math.max(0, (Number(subtotal) || 0) - (Number(discountAmount) || 0) + (Number(shippingEstimate) || 0));
 
   const applyCoupon = async (code) => {
     if (!code || !code.trim()) {
@@ -212,6 +272,7 @@ export const CartProvider = ({ children }) => {
       value={{
         items,
         addItem,
+        addToCart,
         updateQuantity,
         removeItem,
         clearCart,

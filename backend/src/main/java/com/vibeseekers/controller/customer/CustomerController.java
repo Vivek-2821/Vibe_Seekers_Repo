@@ -89,7 +89,10 @@ public class CustomerController {
             @RequestPart(value = "screenshot", required = false) MultipartFile screenshot
     ) throws Exception {
         CreateOrderRequest request = objectMapper.readValue(orderDataJson, CreateOrderRequest.class);
-        User user = userRepository.findById(principal.getId()).orElseThrow();
+        User user = null;
+        if (principal != null && principal.getId() != null) {
+            user = userRepository.findById(principal.getId()).orElse(null);
+        }
         OrderResponseDto order = orderService.createOrder(user, request, screenshot);
         return ResponseEntity.ok(ApiResponse.ok("Order placed successfully!", order));
     }
@@ -99,7 +102,10 @@ public class CustomerController {
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreateOrderRequest request
     ) {
-        User user = userRepository.findById(principal.getId()).orElseThrow();
+        User user = null;
+        if (principal != null && principal.getId() != null) {
+            user = userRepository.findById(principal.getId()).orElse(null);
+        }
         OrderResponseDto order = orderService.createOrder(user, request, null);
         return ResponseEntity.ok(ApiResponse.ok("Order placed successfully!", order));
     }

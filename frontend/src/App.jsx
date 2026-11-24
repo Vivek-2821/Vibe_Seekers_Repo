@@ -11,6 +11,7 @@ import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { WhatsAppButton } from './components/common/WhatsAppButton';
 import { AdminLayout } from './components/admin/AdminLayout';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Customer Pages
 import { Home } from './pages/customer/Home';
@@ -51,26 +52,20 @@ const CustomerLayout = () => {
 
 export const App = () => {
   return (
-    <AuthProvider>
-      <WishlistProvider>
-        <CartProvider>
-          <Router>
-            <Routes>
-              {/* Customer Storefront Routes */}
-              <Route element={<CustomerLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/product/:slug" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route
-                  path="/checkout"
-                  element={
-                    <ProtectedRoute>
-                      <Checkout />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/track-order" element={<TrackOrder />} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <Router>
+              <Routes>
+                {/* Customer Storefront Routes */}
+                <Route element={<CustomerLayout />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/product/:slug" element={<ProductDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/track-order" element={<TrackOrder />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />
@@ -108,6 +103,7 @@ export const App = () => {
         </CartProvider>
       </WishlistProvider>
     </AuthProvider>
+  </ErrorBoundary>
   );
 };
 

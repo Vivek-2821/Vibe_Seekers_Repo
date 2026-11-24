@@ -148,9 +148,17 @@ export const Checkout = () => {
         formData.append('screenshot', screenshotFile);
       }
 
-      const res = await axiosInstance.post('/api/customer/orders', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      let res;
+      try {
+        res = await axiosInstance.post('/api/orders', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } catch (orderErr) {
+        // Fallback to /api/customer/orders if needed
+        res = await axiosInstance.post('/api/customer/orders', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
 
       setPlacedOrder(res.data?.data || res.data);
       clearCart();
@@ -574,7 +582,7 @@ export const Checkout = () => {
                           )}
                         </div>
                         <span className="text-xs font-bold text-zinc-300">
-                          ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                          ₹{(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('en-IN')}
                         </span>
                       </div>
                     ))}
@@ -586,25 +594,25 @@ export const Checkout = () => {
               <div className="border-t border-zinc-800 pt-4 space-y-2 text-xs text-zinc-400">
                 <div className="flex justify-between">
                   <span>Items Subtotal</span>
-                  <span className="text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+                  <span className="text-white">₹{Number(subtotal || 0).toLocaleString('en-IN')}</span>
                 </div>
-                {discountAmount > 0 && (
+                {Number(discountAmount || 0) > 0 && (
                   <div className="flex justify-between text-emerald-400">
                     <span>Coupon Discount</span>
-                    <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                    <span>-₹{Number(discountAmount || 0).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  {shippingEstimate > 0 ? (
-                    <span className="font-bold text-white">₹{shippingEstimate.toLocaleString('en-IN')}</span>
+                  {Number(shippingEstimate || 0) > 0 ? (
+                    <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toLocaleString('en-IN')}</span>
                   ) : (
                     <span className="text-emerald-400 uppercase font-bold">FREE (₹0)</span>
                   )}
                 </div>
                 <div className="border-t border-zinc-800 pt-2 flex justify-between text-sm font-extrabold text-white">
                   <span>FINAL PAYABLE AMOUNT</span>
-                  <span>₹{payableAmount.toLocaleString('en-IN')}</span>
+                  <span>₹{Number(payableAmount || 0).toLocaleString('en-IN')}</span>
                 </div>
               </div>
 

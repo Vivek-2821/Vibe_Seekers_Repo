@@ -62,7 +62,7 @@ export const ProductDetail = () => {
 
         // Pre-select size and color if available
         if (data.sizeStocks && data.sizeStocks.length > 0) {
-          const inStock = data.sizeStocks.find((s) => s.stockQuantity > 0);
+          const inStock = data.sizeStocks.find((s) => (s.stock ?? s.stockQuantity ?? 0) > 0);
           setSelectedSize(inStock ? inStock.size : data.sizeStocks[0].size);
         } else {
           setSelectedSize('L');
@@ -341,11 +341,11 @@ export const ProductDetail = () => {
             {/* Price block */}
             <div className="flex items-baseline gap-3 pb-4 border-b border-zinc-800">
               <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
-                ₹{Number(product.price).toLocaleString('en-IN')}
+                ₹{Number(product.price || 0).toLocaleString('en-IN')}
               </span>
               {product.mrp && Number(product.mrp) > Number(product.price) && (
                 <span className="text-sm text-zinc-500 line-through">
-                  ₹{Number(product.mrp).toLocaleString('en-IN')}
+                  ₹{Number(product.mrp || 0).toLocaleString('en-IN')}
                 </span>
               )}
               {discountPercent && (
@@ -402,7 +402,7 @@ export const ProductDetail = () => {
               <div className="grid grid-cols-5 gap-2">
                 {['S', 'M', 'L', 'XL', 'XXL'].map((sz) => {
                   const stockEntry = product.sizeStocks?.find((s) => s.size === sz);
-                  const isOutOfStock = stockEntry && stockEntry.stockQuantity <= 0;
+                  const isOutOfStock = stockEntry && (stockEntry.stock ?? stockEntry.stockQuantity ?? 0) <= 0;
 
                   return (
                     <button
