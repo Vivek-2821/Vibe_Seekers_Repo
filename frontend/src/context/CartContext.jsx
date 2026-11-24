@@ -210,9 +210,9 @@ export const CartProvider = ({ children }) => {
 
   const subtotal = items.reduce((acc, item) => acc + (Number(item?.price) || 0) * (Number(item?.quantity) || 1), 0);
   const itemCount = items.reduce((acc, item) => acc + (Number(item?.quantity) || 1), 0);
-  const shippingEstimate = shippingConfig.shippingEnabled
-    ? (Number(shippingConfig.shippingAmount) || 79.0)
-    : 0;
+  const shippingEnabled = !!shippingConfig?.shippingEnabled;
+  const shippingAmount = Number(shippingConfig?.shippingAmount || 0);
+  const shippingEstimate = shippingEnabled ? shippingAmount : 0;
 
   // Calculate discount amount based on applied coupon and subtotal
   let discountAmount = 0;
@@ -281,8 +281,10 @@ export const CartProvider = ({ children }) => {
         discountAmount,
         finalTotal,
         shippingEstimate,
+        shippingEnabled,
+        shippingAmount,
         shippingConfig,
-        isShippingFree: !shippingConfig.shippingEnabled,
+        isShippingFree: !shippingEnabled,
         isCartOpen,
         openCart,
         closeCart,

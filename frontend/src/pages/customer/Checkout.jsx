@@ -8,7 +8,17 @@ import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const Checkout = () => {
   const { user } = useAuth();
-  const { items, subtotal, discountAmount, finalTotal, shippingEstimate, appliedCoupon, clearCart } = useCart();
+  const {
+    items = [],
+    subtotal = 0,
+    discountAmount = 0,
+    finalTotal = 0,
+    shippingEstimate = 0,
+    shippingEnabled = false,
+    shippingAmount = 0,
+    appliedCoupon = null,
+    clearCart,
+  } = useCart() || {};
   const navigate = useNavigate();
 
   // Delivery details form state
@@ -605,7 +615,7 @@ export const Checkout = () => {
                 <div className="flex justify-between">
                   <span>Shipping</span>
                   {Number(shippingEstimate || 0) > 0 ? (
-                    <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toFixed(2)}</span>
                   ) : (
                     <span className="text-emerald-400 uppercase font-bold">FREE (₹0)</span>
                   )}

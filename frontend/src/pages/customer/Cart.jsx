@@ -7,31 +7,29 @@ import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const Cart = () => {
   const {
-    items,
+    items = [],
     updateQuantity,
     removeItem,
     clearCart,
-    subtotal,
-    discountAmount,
-    finalTotal,
-    shippingEstimate,
-    itemCount,
-    appliedCoupon,
+    subtotal = 0,
+    discountAmount = 0,
+    finalTotal = 0,
+    shippingEstimate = 0,
+    shippingEnabled = false,
+    shippingAmount = 0,
+    itemCount = 0,
+    appliedCoupon = null,
     applyCoupon,
     removeCoupon,
-    couponError,
-    couponLoading,
-  } = useCart();
+    couponError = '',
+    couponLoading = false,
+  } = useCart() || {};
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState('');
 
   const handleProceedToCheckout = () => {
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: { pathname: '/checkout' } } });
-    } else {
-      navigate('/checkout');
-    }
+    navigate('/checkout');
   };
 
   const handleCouponSubmit = async (e) => {
@@ -291,7 +289,7 @@ export const Cart = () => {
                 <div className="flex justify-between">
                   <span>Express Courier Shipping</span>
                   {Number(shippingEstimate || 0) > 0 ? (
-                    <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toFixed(2)}</span>
                   ) : (
                     <span className="text-emerald-400 font-bold uppercase">FREE (₹0)</span>
                   )}

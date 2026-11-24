@@ -7,20 +7,23 @@ import { resolveImageUrl } from '../../utils/imageUrl';
 
 export const CartDrawer = () => {
   const {
-    items,
+    items = [],
     isCartOpen,
     closeCart,
     updateQuantity,
     removeItem,
-    subtotal,
-    discountAmount,
-    finalTotal,
+    subtotal = 0,
+    discountAmount = 0,
+    finalTotal = 0,
+    shippingEstimate = 0,
+    shippingEnabled = false,
+    shippingAmount = 0,
     appliedCoupon,
     applyCoupon,
     removeCoupon,
     couponError,
     couponLoading,
-  } = useCart();
+  } = useCart() || {};
 
   const [couponInput, setCouponInput] = useState('');
   const navigate = useNavigate();
@@ -80,9 +83,15 @@ export const CartDrawer = () => {
             <div className="bg-[#141414] px-6 py-2.5 border-b border-zinc-800/60 text-xs flex items-center justify-between text-zinc-300">
               <span className="flex items-center gap-1.5 font-medium">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Free Express Delivery Pan-India
+                {shippingEnabled && Number(shippingEstimate || 0) > 0
+                  ? 'Standard Express Delivery Pan-India'
+                  : 'Free Express Delivery Pan-India'}
               </span>
-              <span className="text-zinc-400 font-mono">₹0 FEE</span>
+              <span className="text-zinc-400 font-mono">
+                {shippingEnabled && Number(shippingEstimate || 0) > 0
+                  ? `₹${Number(shippingEstimate).toFixed(2)}`
+                  : 'FREE (₹0)'}
+              </span>
             </div>
 
             {/* Cart Items List */}
@@ -256,9 +265,9 @@ export const CartDrawer = () => {
                   <div className="flex justify-between">
                     <span>Shipping</span>
                     {Number(shippingEstimate || 0) > 0 ? (
-                      <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toLocaleString('en-IN')}</span>
+                      <span className="font-bold text-white">₹{Number(shippingEstimate || 0).toFixed(2)}</span>
                     ) : (
-                      <span className="text-emerald-400 uppercase font-semibold">Free (₹0)</span>
+                      <span className="text-emerald-400 uppercase font-semibold">FREE (₹0)</span>
                     )}
                   </div>
                   <div className="border-t border-zinc-800 pt-2 flex justify-between text-base font-bold text-white">
