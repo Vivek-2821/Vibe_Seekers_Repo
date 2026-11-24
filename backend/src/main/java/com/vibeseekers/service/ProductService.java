@@ -27,15 +27,18 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final ProductSizeStockRepository sizeStockRepository;
     private final MediaStorageService mediaStorageService;
+    private final com.vibeseekers.repository.OrderItemRepository orderItemRepository;
 
     public ProductService(ProductRepository productRepository,
             ProductImageRepository productImageRepository,
             ProductSizeStockRepository sizeStockRepository,
-            MediaStorageService mediaStorageService) {
+            MediaStorageService mediaStorageService,
+            com.vibeseekers.repository.OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.productImageRepository = productImageRepository;
         this.sizeStockRepository = sizeStockRepository;
         this.mediaStorageService = mediaStorageService;
+        this.orderItemRepository = orderItemRepository;
     }
 
     public Page<ProductResponseDto> getPublicProducts(ProductCategory category,
@@ -267,6 +270,14 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        // Detach product from any existing order items so FK constraint doesn't block deletion.
+        // The OrderItem already snapshots productName, unitPrice, imageUrl so no data is lost.
+        try {
+            orderItemRepository.nullifyProductReference(product.getId());
+        } catch (Exception e) {
+            // order_items table may not exist yet on a fresh DB — safe to ignore
+        }
 
         // Delete cloud images
         List<ProductImage> images = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());

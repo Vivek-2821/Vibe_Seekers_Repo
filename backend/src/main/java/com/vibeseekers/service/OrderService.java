@@ -260,24 +260,28 @@ public class OrderService {
         return mapToResponseDto(dispatchedOrder);
     }
 
+    @Transactional(readOnly = true)
     public OrderResponseDto getOrderByOrderNumber(String orderNumber) {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("No order found with number: " + orderNumber));
         return mapToResponseDto(order);
     }
 
+    @Transactional(readOnly = true)
     public OrderResponseDto getOrderByAwb(String awb) {
         Order order = orderRepository.findByShiprocketAwb(awb)
                 .orElseThrow(() -> new ResourceNotFoundException("No order found with AWB: " + awb));
         return mapToResponseDto(order);
     }
 
+    @Transactional(readOnly = true)
     public List<OrderResponseDto> getUserOrders(Long userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(this::mapToResponseDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Page<OrderResponseDto> getAllOrdersAdmin(OrderStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return orderRepository.findAllWithFilter(status, pageable).map(this::mapToResponseDto);

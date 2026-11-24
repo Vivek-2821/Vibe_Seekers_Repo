@@ -74,7 +74,17 @@ public class DataInitializer implements CommandLineRunner {
             "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_text VARCHAR(500)",
             "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_design_url VARCHAR(1000)",
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_customizable BOOLEAN DEFAULT FALSE",
-            "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number VARCHAR(64)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_notes TEXT",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS admin_notes TEXT",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(64)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10,2) DEFAULT 0",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shiprocket_order_id BIGINT",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shiprocket_shipment_id BIGINT",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shiprocket_awb VARCHAR(100)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS courier_name VARCHAR(200)",
+            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_url VARCHAR(1000)"
         };
         for (String sql : alterStatements) {
             try {
@@ -85,6 +95,22 @@ public class DataInitializer implements CommandLineRunner {
                 // Table might not exist yet during first boot (Hibernate creates it) or syntax varies in H2
                 log.debug("Schema migration notice for {}: {}", sql, e.getMessage());
             }
+        }
+        // Ensure user_id column is nullable for guest orders
+        try {
+            if (entityManager != null) {
+                entityManager.createNativeQuery("ALTER TABLE orders ALTER COLUMN user_id DROP NOT NULL").executeUpdate();
+            }
+        } catch (Exception e) {
+            log.debug("user_id nullable migration notice: {}", e.getMessage());
+        }
+        // Ensure product_id column is nullable on order_items for deleted products
+        try {
+            if (entityManager != null) {
+                entityManager.createNativeQuery("ALTER TABLE order_items ALTER COLUMN product_id DROP NOT NULL").executeUpdate();
+            }
+        } catch (Exception e) {
+            log.debug("product_id nullable migration notice: {}", e.getMessage());
         }
     }
 
