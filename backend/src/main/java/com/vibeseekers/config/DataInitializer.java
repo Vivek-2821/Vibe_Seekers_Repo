@@ -72,7 +72,9 @@ public class DataInitializer implements CommandLineRunner {
             "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_charge NUMERIC(10,2) DEFAULT 0.00",
             "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS customization_placement VARCHAR(100)",
             "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_text VARCHAR(500)",
-            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_design_url VARCHAR(1000)"
+            "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_design_url VARCHAR(1000)",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_customizable BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"
         };
         for (String sql : alterStatements) {
             try {
@@ -173,15 +175,24 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedStoreSettings() {
-        storeSettingService.setSetting("codEnabled", "false", "Cash on Delivery Availability (Prepaid only default)");
-        storeSettingService.setSetting("returnsEnabled", "false", "Returns Policy Toggle (Returns currently disabled)");
-        storeSettingService.setSetting("upiId", "9860498749-2@ybl", "Official Store UPI ID for prepaid orders");
-        storeSettingService.setSetting("upiPayeeName", "Vivek Ashok Matne", "Official Payee Name for UPI transactions");
-        storeSettingService.setSetting("supportPhone", "+91 9860498749", "Customer Support Phone & WhatsApp");
-        storeSettingService.setSetting("storeEmail", "vibeseekers09@gmail.com", "Official Store Support Email");
-        storeSettingService.setSetting("instagramUrl", "https://www.instagram.com/vibe_seekers_09?cnvx=enZ5NDYwM2doN2ll&utm_source=qr", "Instagram Handle");
-        storeSettingService.setSetting("phonePeQrUrl", "/assets/phonepe-qr.jpg", "Static PhonePe QR code path");
-        log.info("Initialized default store policies and payment settings.");
+        seedSettingIfAbsent("codEnabled", "false", "Cash on Delivery Availability (Prepaid only default)");
+        seedSettingIfAbsent("returnsEnabled", "false", "Returns Policy Toggle (Returns currently disabled)");
+        seedSettingIfAbsent("upiId", "9860498749-2@ybl", "Official Store UPI ID for prepaid orders");
+        seedSettingIfAbsent("upiPayeeName", "Vivek Ashok Matne", "Official Payee Name for UPI transactions");
+        seedSettingIfAbsent("supportPhone", "+91 9860498749", "Customer Support Phone & WhatsApp");
+        seedSettingIfAbsent("storeEmail", "vibeseekers09@gmail.com", "Official Store Support Email");
+        seedSettingIfAbsent("instagramUrl", "https://www.instagram.com/vibe_seekers_09?cnvx=enZ5NDYwM2doN2ll&utm_source=qr", "Instagram Handle");
+        seedSettingIfAbsent("phonePeQrUrl", "/assets/phonepe-qr.jpg", "Static PhonePe QR code path");
+        log.info("Verified default store policies and payment settings (existing values preserved).");
+    }
+
+    /** Only insert a store setting if it does not already exist — never overwrite admin-configured values. */
+    private void seedSettingIfAbsent(String key, String defaultValue, String description) {
+        String existing = storeSettingService.getSetting(key, null);
+        if (existing == null) {
+            storeSettingService.setSetting(key, defaultValue, description);
+            log.info("Seeded default store setting: {} = {}", key, defaultValue);
+        }
     }
 
     private void seedSampleProducts() {
